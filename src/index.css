@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/* Brand palette taken from the shop sign: charcoal panel, signal red, white */
+@theme {
+  --color-ink: #2b2a2f;
+  --color-ink-900: #1f1e22;
+  --color-brand: #e3262d;
+  --color-brand-600: #c41e25;
+  --color-paper: #f5f4f1;
+  --color-line: #e7e4df;
+  --color-muted: #66656b;
+
+  --font-sans: "Cairo", "Nunito", system-ui, sans-serif;
+  --font-logo: "Nunito", system-ui, sans-serif;
+}
+
+@layer base {
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-white font-sans text-ink antialiased; }
+  :focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
+  button:not(:disabled), [role="tab"] { cursor: pointer; }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-bold transition duration-200 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-red { @apply bg-brand text-white hover:bg-brand-600; box-shadow: 0 10px 24px -12px rgb(227 38 45 / .7); }
+  .btn-ink { @apply bg-ink text-white hover:bg-brand disabled:hover:bg-ink; }
+
+  .badge { @apply rounded-full px-2.5 py-1 text-[11px] font-extrabold leading-none; }
+
+  .size-chip {
+    @apply min-w-9 rounded-xl border border-line bg-white px-2 py-1 text-[13px] font-bold sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
+  }
+  .size-chip[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
+
+  .filter-tab {
+    @apply inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-white px-5 font-bold text-ink transition hover:border-ink;
+  }
+  .filter-tab[aria-selected="true"] { @apply border-ink bg-ink text-white; }
+  .filter-count { @apply rounded-full bg-paper px-2 text-xs leading-5 text-muted; }
+  .filter-tab[aria-selected="true"] .filter-count { @apply bg-brand text-white; }
+
+  .field-label { @apply mb-1.5 block text-sm font-bold text-ink; }
+  .field {
+    @apply block h-12 w-full rounded-2xl border border-line bg-paper px-4 text-ink transition outline-none placeholder:text-muted/70 focus:border-ink focus:bg-white;
+  }
+
+  .contact-tile {
+    @apply flex items-center gap-4 rounded-[22px] p-5 transition duration-200 hover:-translate-y-0.5;
+  }
+  .contact-tile:hover { box-shadow: 0 14px 30px -18px rgb(0 0 0 / .45); }
+
+  .qty-btn { @apply grid size-8 place-items-center rounded-full text-ink hover:bg-paper; }
+  .fab {
+    @apply relative grid size-14 place-items-center rounded-full transition hover:scale-105;
+    box-shadow: 0 12px 28px -10px rgb(0 0 0 / .45);
+  }
+  .footer-h { @apply mb-4 text-sm font-extrabold uppercase tracking-wide text-white/45; }
+
+  .skip-link {
+    @apply fixed start-3 top-3 z-[60] -translate-y-24 rounded-full bg-brand px-4 py-2 font-bold text-white transition focus:translate-y-0;
+  }
+
+  /* active underline for header links */
+  .nav-link { position: relative; }
+  .nav-link::after {
+    content: ""; position: absolute; inset-inline: 1rem; bottom: .3rem; height: 2px;
+    background: var(--color-brand); border-radius: 2px; transform: scaleX(0); transition: transform .25s ease;
+  }
+  .nav-link:hover::after { transform: scaleX(1); }
+}
+
+/* perforated vinyl-banner texture */
+.dots {
+  background-image: radial-gradient(circle, #fff 1px, transparent 1.3px);
+  background-size: 9px 9px;
+}
+
+/* garment illustration */
+.g-shape > * { fill: var(--g-fill); }
+.g-shape > .g-line { fill: none; stroke: var(--g-ink); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.g-shape > .g-dot { fill: var(--g-ink); }
+.g-sheen { background: radial-gradient(120% 80% at 50% 0%, rgb(255 255 255 / .35), transparent 60%); }
+.g-art { filter: drop-shadow(0 14px 16px rgb(0 0 0 / .14)); transition: transform .5s cubic-bezier(.2,.7,.2,1); transform-origin: 50% 8%; }
+
+.product-card { transition: transform .3s ease, box-shadow .3s ease; }
+.product-card:hover { transform: translateY(-4px); box-shadow: 0 22px 40px -26px rgb(0 0 0 / .45); }
+.product-card:hover .g-art { transform: rotate(-3deg) scale(1.03); }
+.product-card .product-media { transition: transform .5s ease; }
+img.product-media { transform-origin: center; }
+.product-card:hover img.product-media { transform: scale(1.04); }
+
+.cat-card { transition: transform .3s ease, box-shadow .3s ease; }
+.cat-card:hover { transform: translateY(-3px); box-shadow: 0 22px 40px -26px rgb(0 0 0 / .45); }
+.cat-card:hover .g-art { transform: rotate(4deg) scale(1.05); }
+
+.why-card { transition: transform .3s ease; }
+.why-card:hover { transform: translateY(-3px); }
+
+.hero-tile .g-art { animation: sway 6s ease-in-out infinite; }
+.hero-tile:nth-child(2) .g-art { animation-delay: -2s; }
+
+@keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+
+/* marquee runs toward the reading direction */
+.marquee { animation: marquee 40s linear infinite; }
+[dir="rtl"] .marquee { animation-name: marquee-rtl; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes marquee-rtl { to { transform: translateX(50%); } }
+
+/* scroll reveal */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease var(--d, 0ms), transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0ms); }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+  .reveal { opacity: 1; transform: none; }
+}
+
+/* above-the-fold entrance (pure CSS, no JS needed) */
+.rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) var(--d, 0ms) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+
+.title-swap { animation: title-in .6s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes title-in { from { opacity: 0; transform: translateY(14px); } }
