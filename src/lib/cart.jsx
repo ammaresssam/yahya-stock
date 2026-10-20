@@ -70,6 +70,20 @@ export function CartProvider({ children }) {
         })
         return true
       },
+      // adds up to `qty` pieces, never more than what's left in stock; returns how many were added
+      addMany: (id, size, qty) => {
+        const stock = variantOf(id, size)?.stock ?? 0
+        const inCart = items.find((i) => i.id === id && i.size === size)?.qty ?? 0
+        const n = Math.max(0, Math.min(qty, stock - inCart))
+        if (!n) return 0
+        setItems((prev) => {
+          const hit = prev.find((i) => i.id === id && i.size === size)
+          if (hit) return prev.map((i) => (i === hit ? { ...i, qty: i.qty + n } : i))
+          return [...prev, { id, size, qty: n }]
+        })
+        return n
+      },
+      inCartQty: (id, size) => items.find((i) => i.id === id && i.size === size)?.qty ?? 0,
       setQty: (id, size, qty) => {
         const stock = variantOf(id, size)?.stock ?? 0
         const next = Math.min(qty, stock)

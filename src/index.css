@@ -17,6 +17,8 @@
 @layer base {
   html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
   body { @apply bg-white font-sans text-ink antialiased; }
+  /* keep the last content clear of the phone tab bar */
+  @media (max-width: 767px) { body { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); } }
   :focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
   button:not(:disabled), [role="tab"] { cursor: pointer; }
 }
@@ -49,6 +51,8 @@
     @apply min-w-9 rounded-xl border border-line bg-white px-2 py-1 text-[13px] font-bold sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
   }
   .size-chip[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
+  .size-chip-lg { @apply h-12 min-w-14 rounded-2xl border border-line bg-white px-4 text-base font-black text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line; }
+  .size-chip-lg[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
 
   .filter-tab {
     @apply inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-white px-5 font-bold text-ink transition hover:border-ink;

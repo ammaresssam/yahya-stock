@@ -6,7 +6,6 @@ import { useData } from '../lib/store'
 import { LOW_STOCK } from '../lib/product'
 import { discountOf, maxDiscount } from '../lib/catalog'
 import GarmentArt from './GarmentArt'
-import Gallery from './Gallery'
 import { BagIcon, CameraIcon, WhatsAppIcon } from './Icons'
 
 export default function ProductCard({ product: p, className = '' }) {
@@ -17,7 +16,6 @@ export default function ProductCard({ product: p, className = '' }) {
   const [size, setSize] = useState(inStock.length === 1 && p.variants.length === 1 ? inStock[0].size : null)
   const [hint, setHint] = useState(null) // null | 'pick' | 'max'
   const [added, setAdded] = useState(false)
-  const [gallery, setGallery] = useState(null)
   const sizesId = useId()
   const name = pick(p.name)
   const sold = p.totalStock === 0
@@ -49,12 +47,14 @@ export default function ProductCard({ product: p, className = '' }) {
     <article className={`product-card group relative flex flex-col overflow-hidden rounded-[20px] bg-white ring-1 ring-line ${className}`}>
       <div className="relative bg-paper">
         {p.image ? (
-          <button type="button" onClick={() => setGallery(0)} className="relative block w-full overflow-hidden" aria-label={many ? `${name} — ${t('viewPhotos')(num(p.images.length))}` : name}>
+          <a href={`#/product/${p.id}`} className="relative block w-full overflow-hidden" aria-label={`${t('viewProduct')}: ${name}`}>
             <img src={p.image} alt={name} loading="lazy" decoding="async" width="600" height="750" className="product-media aspect-[4/5] w-full object-cover" />
             {many && <img src={p.images[1]} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" />}
-          </button>
+          </a>
         ) : (
-          <GarmentArt {...p.art} label={`${name} — ${t('illustration')}`} className="product-media aspect-[4/5] p-7" />
+          <a href={`#/product/${p.id}`} className="block" aria-label={`${t('viewProduct')}: ${name}`}>
+            <GarmentArt {...p.art} label={`${name} — ${t('illustration')}`} className="product-media aspect-[4/5] p-7" />
+          </a>
         )}
 
         <div className="pointer-events-none absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-1.5">
@@ -78,7 +78,7 @@ export default function ProductCard({ product: p, className = '' }) {
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="flex items-start justify-between gap-1">
-          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink sm:text-base">{name}</h3>
+          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink sm:text-base"><a href={`#/product/${p.id}`} className="hover:underline">{name}</a></h3>
           <a href={waLink(t('askMsg')(name, size))} target="_blank" rel="noopener noreferrer" aria-label={t('askWhatsapp')} title={t('askWhatsapp')} className="-mt-1 -me-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[#1fa855] hover:bg-[#1fa855]/10">
             <WhatsAppIcon className="size-[18px]" />
           </a>
@@ -120,7 +120,6 @@ export default function ProductCard({ product: p, className = '' }) {
         </button>
       </div>
 
-      {gallery !== null && <Gallery images={p.images} name={name} start={gallery} onClose={() => setGallery(null)} />}
     </article>
   )
 }

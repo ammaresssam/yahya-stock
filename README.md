@@ -11,6 +11,18 @@ It has two modes:
 
 > ⚠️ The address, phone numbers and links come from the shop sign and public listings. The owner must confirm them in `src/data/site.js`.
 
+## Preview it locally
+
+```bash
+npm install
+npm run dev
+```
+Open http://localhost:5173. Use the browser's phone view (F12 → device toolbar) to see the mobile layout and the tab bar.
+
+- **Demo mode** (the default): sample products and WhatsApp ordering.
+- **Full shop with checkout, no Supabase needed:** run `npm run dev:backend` in one terminal. In a second terminal, run `VITE_SUPABASE_URL=http://localhost:54321 VITE_SUPABASE_ANON_KEY=local npm run dev`. On Windows PowerShell: `$env:VITE_SUPABASE_URL='http://localhost:54321'; $env:VITE_SUPABASE_ANON_KEY='local'; npm run dev`.
+- **Admin panel without a database:** http://localhost:5173/#/admin?mock, log in with `owner@test.com` / `123456`.
+
 ## Run it locally
 
 You need Node.js 18 or newer.
@@ -35,7 +47,12 @@ npm run preview    # serve the built site locally
 | New arrivals | Products marked *new* that are in stock (swipe on phones, arrows on desktop) |
 | Trust strip | Only facts that are true: cash on delivery and delivery to governorates appear **only when online checkout is connected**; WhatsApp and the physical store always |
 | Store and contact | Phones and WhatsApp (from the shop sign). The address shows "قيد التأكيد"; **the map and directions appear only after `addressConfirmed: true`** in `site.js`. Opening hours appear only once entered |
-| Cart, checkout, tracking | Unchanged behaviour: per-size prices, stock caps, cash on delivery, private tracking link, WhatsApp as a second option |
+| Promo bar | Above the header, scrolls away. Only true facts: the demo notice, the real highest discount, and "cash on delivery" only when checkout is connected |
+| Product page (`#/product/<id>`) | Large photo with thumbnails and full-screen view, size buttons with stock, a quantity selector capped at what's left (minus what's already in the cart), add to cart and buy now, ask on WhatsApp, related products from the same category. The browser tab shows the product name |
+| Store picks | Products the owner marks as *featured*. There's no sales data, so this is labelled "اختيارات المحل", not "popular" |
+| My orders (`#/orders`) | There are no customer accounts. This lists the orders placed from this device, with their private tracking links |
+| Phone tab bar | Home, shop, cart, my orders and WhatsApp, always in thumb reach (phones only) |
+| Cart, checkout, tracking | Same behaviour as before: per-size prices, stock caps, cash on delivery, private tracking link, WhatsApp as a second option. The cart now itemises items, delivery ("calculated by governorate") and the total before delivery |
 
 ## Connect the database and admin panel (about 15 minutes, free)
 

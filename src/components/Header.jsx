@@ -3,11 +3,12 @@ import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
 import { useData } from '../lib/store'
 import { useCatalog } from '../lib/catalogState'
-import { isOnSale } from '../lib/catalog'
+import { isOnSale, maxDiscount } from '../lib/catalog'
+import { checkoutAvailable, rememberedOrders } from '../lib/api'
 import { waLink } from '../lib/links'
 import { site } from '../data/site'
 import { Wordmark } from './Brand'
-import { BagIcon, CloseIcon, GlobeIcon, MenuIcon, SearchIcon, WhatsAppIcon } from './Icons'
+import { BagIcon, CloseIcon, GlobeIcon, MenuIcon, ReceiptIcon, SearchIcon, WhatsAppIcon } from './Icons'
 
 export const navItems = [
   ['#home', 'navHome'],
@@ -47,7 +48,7 @@ function SearchBox({ id, className = '', autoFocus = false, onDone }) {
 }
 
 export default function Header() {
-  const { t, pick, toggle } = useLang()
+  const { t, pick, toggle, num } = useLang()
   const cart = useCart()
   const { live, categories, products } = useData()
   const { filters, browse } = useCatalog()
@@ -55,6 +56,9 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const mobileSearchId = useId()
   const hasOffers = products.some(isOnSale)
+  // promo bar: only facts that are true right now
+  const topDiscount = products.filter((p) => p.totalStock > 0).reduce((m, p) => Math.max(m, maxDiscount(p)), 0)
+  const showOrders = checkoutAvailable || rememberedOrders().length > 0
 
   useEffect(() => {
     if (!open) return
@@ -71,8 +75,20 @@ export default function Header() {
   ]
 
   return (
+    <>
+      {(!live || topDiscount > 0 || checkoutAvailable) && (
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 bg-brand px-4 py-1.5 text-center text-[12px] font-bold leading-snug">
+          {!live && <span>{t('demoBar')}</span>}
+          {topDiscount > 0 && (
+            <button type="button" onClick={() => browse({ onSale: true, sort: 'discount' })} className="underline-offset-2 hover:underline">
+              {t('promoOffers')(num(topDiscount))}
+            </button>
+          )}
+          {checkoutAvailable && <span>· {t('promoCod')}</span>}
+        </div>
+      )}
+    {/* the promo bar above scrolls away; the header itself stays */}
     <header className="sticky top-0 z-40 bg-ink-900 text-white shadow-[0_8px_30px_-18px_rgba(0,0,0,.6)]">
-      {!live && <p className="bg-brand px-4 py-1 text-center text-[12px] font-semibold leading-snug">{t('demoBar')}</p>}
 
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
         <button
@@ -107,6 +123,11 @@ export default function Header() {
             <GlobeIcon className="size-4" />
             <span>{t('switchLang')}</span>
           </button>
+          {showOrders && (
+            <a href="#/orders" aria-label={t('myOrders')} title={t('myOrders')} className="hidden size-10 items-center justify-center rounded-full hover:bg-white/10 md:inline-flex">
+              <ReceiptIcon className="size-[21px]" />
+            </a>
+          )}
           <a href={waLink()} target="_blank" rel="noopener noreferrer" className="hidden h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold hover:border-[#25d366] hover:text-[#25d366] lg:inline-flex">
             <WhatsAppIcon className="size-[18px]" />
             {t('whatsapp')}
@@ -170,5 +191,6 @@ export default function Header() {
         </nav>
       </div>
     </header>
+    </>
   )
 }

@@ -110,8 +110,8 @@ export default function CartDrawer() {
                     <GarmentArt {...l.product.art} className="size-20 shrink-0 rounded-2xl p-1.5" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-extrabold text-ink">{pick(l.product.name)}</p>
-                    <p className="text-sm text-muted">{t('size')}: <b className="text-ink">{l.size}</b></p>
+                    <a href={`#/product/${l.product.id}`} onClick={() => cart.setOpen(false)} className="font-extrabold text-ink hover:underline">{pick(l.product.name)}</a>
+                    <p className="text-sm text-muted">{t('size')}: <b dir="ltr" className="text-ink">{l.size}</b> · {t('unitPrice')(price(l.unitPrice))}</p>
                     {l.qty >= l.available && <p className="text-xs font-bold text-amber-600">{t('leftOnly')(num(l.available))}</p>}
                     <div className="mt-2 flex items-center justify-between">
                       <div className="flex items-center rounded-full ring-1 ring-line">
@@ -130,21 +130,27 @@ export default function CartDrawer() {
             </ul>
 
             <div className="border-t border-line bg-paper p-5">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="o-name" className="field-label">{t('yourName')}</label>
-                  <input id="o-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className="field h-11 bg-white" />
+              {!checkoutAvailable && (
+                <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="o-name" className="field-label">{t('yourName')}</label>
+                    <input id="o-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className="field h-11 bg-white" />
+                  </div>
+                  <div>
+                    <label htmlFor="o-area" className="field-label">{t('yourArea')}</label>
+                    <input id="o-area" value={area} onChange={(e) => setArea(e.target.value)} className="field h-11 bg-white" />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="o-area" className="field-label">{t('yourArea')}</label>
-                  <input id="o-area" value={area} onChange={(e) => setArea(e.target.value)} className="field h-11 bg-white" />
+              )}
+              <dl className="grid gap-1.5 text-sm">
+                <div className="flex justify-between"><dt className="text-muted">{t('itemsTotal')} ({num(cart.count)})</dt><dd className="font-bold text-ink">{price(cart.total)}</dd></div>
+                {checkoutAvailable && <div className="flex justify-between"><dt className="text-muted">{t('shippingFee')}</dt><dd className="font-bold text-ink">{t('deliveryAtCheckout')}</dd></div>}
+                <div className="mt-1 flex items-baseline justify-between border-t border-line pt-2">
+                  <dt className="font-bold text-ink">{checkoutAvailable ? t('totalBeforeDelivery') : t('subtotal')}</dt>
+                  <dd className="text-2xl font-black text-ink">{price(cart.total)}</dd>
                 </div>
-              </div>
-              <div className="mt-4 flex items-baseline justify-between">
-                <span className="font-bold text-muted">{t('subtotal')}</span>
-                <span className="text-2xl font-black text-ink">{price(cart.total)}</span>
-              </div>
-              <p className="mt-1 text-xs leading-relaxed text-muted">{t('cartNote')}</p>
+              </dl>
+              <p className="mt-1 text-xs leading-relaxed text-muted">{checkoutAvailable ? t('cartNoteCheckout') : t('cartNote')}</p>
               {checkoutAvailable && (
                 <a href="#/checkout" onClick={() => cart.setOpen(false)} className="btn btn-red mt-4 h-13 w-full text-lg">
                   {t('checkout')}

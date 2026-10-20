@@ -8,7 +8,10 @@ import Header from './components/Header'
 import Hero from './components/Hero'
 import Categories from './components/Categories'
 import Shop from './components/Shop'
-import NewArrivals, { Offers } from './components/NewArrivals'
+import NewArrivals, { Offers, StorePicks } from './components/NewArrivals'
+import ProductPage from './components/ProductPage'
+import OrdersPage from './components/OrdersPage'
+import MobileNav from './components/MobileNav'
 import { StoreContact, TrustStrip } from './components/InfoSections'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
@@ -22,6 +25,9 @@ function readRoute() {
   if (h.startsWith('#/checkout')) return { name: 'checkout' }
   const m = h.match(/^#\/order\/([A-Za-z0-9_-]{32,128})/)
   if (m) return { name: 'order', token: m[1] }
+  const pm = h.match(/^#\/product\/([A-Za-z0-9_-]{1,64})/)
+  if (pm) return { name: 'product', id: pm[1] }
+  if (h.startsWith('#/orders')) return { name: 'orders' }
   return { name: 'home' }
 }
 
@@ -58,7 +64,7 @@ function useReveal(key) {
 function FloatingWhatsApp() {
   const { t } = useLang()
   return (
-    <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label={t('orderWhatsapp')} className="fab fixed bottom-4 end-4 z-30 size-12 bg-[#1fa855] text-white">
+    <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label={t('orderWhatsapp')} className="fab fixed bottom-4 end-4 z-30 hidden size-12 bg-[#1fa855] text-white md:grid">
       <WhatsAppIcon className="size-6" />
     </a>
   )
@@ -76,7 +82,7 @@ function Page() {
     }
     const id = window.location.hash.slice(1)
     if (id && !id.startsWith('/')) requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView())
-  }, [route.name, route.token])
+  }, [route.name, route.token, route.id])
 
   return (
     <>
@@ -87,6 +93,10 @@ function Page() {
           <CheckoutPage />
         ) : route.name === 'order' ? (
           <OrderPage key={route.token} token={route.token} />
+        ) : route.name === 'product' ? (
+          <ProductPage key={route.id} id={route.id} />
+        ) : route.name === 'orders' ? (
+          <OrdersPage />
         ) : (
           <>
             <Hero />
@@ -94,6 +104,7 @@ function Page() {
             <Offers />
             <Shop />
             <NewArrivals />
+            <StorePicks />
             <TrustStrip />
             <StoreContact />
           </>
@@ -101,6 +112,7 @@ function Page() {
       </main>
       <Footer />
       {route.name !== 'checkout' && <FloatingWhatsApp />}
+      <MobileNav route={route.name} />
       <CartDrawer />
     </>
   )

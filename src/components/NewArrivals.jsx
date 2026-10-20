@@ -12,6 +12,15 @@ export default function NewArrivals() {
   return <Rail id="new" kicker={t('newKicker')} title={t('newTitle')} text={t('newText')} products={list} tone="dark" />
 }
 
+// Products the owner marked as featured in the admin panel. (There's no sales data,
+// so this is honestly labelled "store picks", not "popular".)
+export function StorePicks() {
+  const { t } = useLang()
+  const { products } = useData()
+  const list = products.filter((p) => p.featured && p.totalStock > 0)
+  return <Rail id="picks" kicker={t('picksKicker')} title={t('picksTitle')} text={t('picksText')} products={list} />
+}
+
 // Only products with a real "before discount" price on a size that's in stock.
 export function Offers() {
   const { t } = useLang()
