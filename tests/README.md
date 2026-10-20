@@ -36,7 +36,7 @@ Run them in the Supabase SQL Editor, or with the anon key from a browser console
    ```sql
    select a.user_id, u.email from public.admin_users a join auth.users u on u.id = a.user_id;
    ```
-4. **A non-admin really is blocked.** Create a throwaway user, log in to `/#/admin` with it, and confirm you see "الحساب ده مش مسموح له". Then, using that user's session in the browser console, try `supabase.from('products').update({ price: 1 }).eq('id', '<some id>')` and confirm 0 rows changed. Delete the throwaway user afterwards.
+4. **A non-admin really is blocked.** Create a throwaway user, log in to `/#/admin` with it, and confirm you see "الحساب ده مش مسموح له". Then, using that user's session in the browser console, try `supabase.from('product_variants').update({ price: 1 }).eq('id', '<some size id>')` and `supabase.rpc('admin_save_product', { payload: {} })`. Confirm 0 rows changed and "not authorized". Delete the throwaway user afterwards.
 5. **The service_role key isn't in the frontend.** Search the built `dist/` folder for `service_role`: there must be no match. The only key in `.env.local` is the anon/publishable one.
 
 ## Test files
@@ -44,3 +44,4 @@ Run them in the Supabase SQL Editor, or with the anon key from a browser console
 | File | What it covers |
 |---|---|
 | `admin-authorization.test.js` | Stage 0. Only admins can change products, categories and photos. It includes a test showing the old rules were vulnerable. |
+| `variants-and-images.test.js` | Stage 1. Sizes with their own price and stock, and photos. Covers who can see and change them, the database rules (no negative stock or zero price, valid discount, no repeated size, at most 8 photos), moving existing data into the new layout, and the owner's all-or-nothing save. |

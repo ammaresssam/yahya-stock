@@ -22,6 +22,11 @@ export async function freshDb({ upTo } = {}) {
   return db
 }
 
+/** Apply one migration file (used to test a migration against data created before it). */
+export async function applyMigration(db, file) {
+  await db.exec(readFileSync(join(migrationsDir, file), 'utf8'))
+}
+
 /**
  * Run `fn` exactly as Supabase would for an API request:
  * the JWT claims are set and the role is switched, inside a transaction.

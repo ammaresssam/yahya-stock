@@ -3,6 +3,7 @@ import supabase from '../lib/supabase'
 import { Wordmark } from '../components/Brand'
 import ProductsTab from './Products'
 import CategoriesTab from './Categories'
+import InventoryTab from './Inventory'
 import { Toast } from './ui'
 
 function useAdminPage() {
@@ -154,7 +155,7 @@ function Panel() {
 
   const refresh = useCallback(async () => {
     const [p, c] = await Promise.all([
-      supabase.from('products').select('*').order('created_at', { ascending: false }),
+      supabase.from('products').select('*, product_variants(*), product_images(*)').order('created_at', { ascending: false }),
       supabase.from('categories').select('*').order('created_at', { ascending: true }),
     ])
     if (p.error || c.error) return setLoadError(true)
@@ -178,23 +179,22 @@ function Panel() {
 
   const tabs = [
     ['products', `المنتجات (${products.length})`],
+    ['inventory', 'المخزون'],
     ['categories', `الأقسام (${categories.length})`],
   ]
 
   return (
     <>
-      <div role="tablist" className="mb-5 flex gap-2">
+      <div role="tablist" className="no-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4">
         {tabs.map(([id, label]) => (
           <button key={id} role="tab" type="button" aria-selected={tab === id} onClick={() => setTab(id)} className="filter-tab">
             {label}
           </button>
         ))}
       </div>
-      {tab === 'products' ? (
-        <ProductsTab products={products} categories={categories} refresh={refresh} notify={notify} />
-      ) : (
-        <CategoriesTab products={products} categories={categories} refresh={refresh} notify={notify} />
-      )}
+      {tab === 'products' && <ProductsTab products={products} categories={categories} refresh={refresh} notify={notify} />}
+      {tab === 'inventory' && <InventoryTab products={products} refresh={refresh} notify={notify} />}
+      {tab === 'categories' && <CategoriesTab products={products} categories={categories} refresh={refresh} notify={notify} />}
       <Toast toast={toast} />
     </>
   )

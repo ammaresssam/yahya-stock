@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { CloseIcon } from '../components/Icons'
 
-export const STOCK = { in: 'متاح', low: 'كمية محدودة', out: 'نفدت الكمية' }
 
 export const ART_TYPES = [
   ['tee', 'تيشيرت'],
@@ -14,6 +13,8 @@ export const ART_TYPES = [
 ]
 
 export const QUICK_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Free Size']
+export const MAX_IMAGES = 8 // matches the limit enforced by the database
+export { LOW_STOCK } from '../lib/product'
 
 // Modal that becomes a full-height sheet on phones
 export function Modal({ title, onClose, children }) {

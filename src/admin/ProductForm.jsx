@@ -1,16 +1,36 @@
 import { useMemo, useState } from 'react'
 import supabase from '../lib/supabase'
 import GarmentArt from '../components/GarmentArt'
+import { ArrowIcon, CloseIcon, PlusIcon, TrashIcon } from '../components/Icons'
 import { toWebp } from './image'
-import { ART_TYPES, Modal, QUICK_SIZES, STOCK } from './ui'
+import { ART_TYPES, MAX_IMAGES, Modal, QUICK_SIZES } from './ui'
 
 const BUCKET = 'product-images'
-const pathFromUrl = (url) => (url && url.includes(`/${BUCKET}/`) ? url.split(`/${BUCKET}/`)[1] : null)
 
 // Western digits only — the owner may type Arabic-Indic digits on an Arabic keyboard
-const toNumber = (v) => {
-  const s = String(v).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^\d]/g, '')
+export const toNumber = (v) => {
+  const s = String(v ?? '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^\d]/g, '')
   return s === '' ? null : Number(s)
+}
+
+let keySeq = 0
+const key = () => `k${++keySeq}`
+
+const SERVER_ERRORS = {
+  name_ar_required: 'اكتب اسم المنتج بالعربي',
+  unknown_category: 'القسم غير موجود — حدّث الصفحة',
+  variants_required: 'أضف مقاس واحد على الأقل',
+  size_required: 'في مقاس من غير اسم',
+  duplicate_size: 'في مقاس مكرر',
+  too_many_images: `أقصى عدد صور ${MAX_IMAGES}`,
+  not_authorized: 'الحساب ده مش مسموح له يعدّل',
+  product_not_found: 'المنتج اتحذف — حدّث الصفحة',
+}
+const explain = (msg = '') => {
+  const hit = Object.keys(SERVER_ERRORS).find((k) => msg.includes(k) || msg.includes(k.replace('_', ' ')))
+  if (hit) return SERVER_ERRORS[hit]
+  if (msg.includes('check')) return 'راجع الأسعار والكميات (السعر أكبر من صفر، والسعر قبل الخصم أكبر من السعر)'
+  return msg || 'حاول مرة أخرى'
 }
 
 export default function ProductForm({ product, categories, onClose, onSaved, notify }) {
@@ -19,10 +39,6 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
     name_ar: product?.name_ar ?? '',
     name_en: product?.name_en ?? '',
     category: product?.category ?? categories[0]?.id ?? '',
-    price: product?.price?.toString() ?? '',
-    old_price: product?.old_price?.toString() ?? '',
-    sizes: (product?.sizes ?? []).join(', '),
-    stock: product?.stock ?? 'in',
     is_new: product?.is_new ?? true,
     featured: product?.featured ?? false,
     active: product?.active ?? true,
@@ -30,198 +46,253 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
     art_color: product?.art_color ?? '#2b2a2f',
     art_bg: product?.art_bg ?? '#e9e7e3',
   }))
-  const [file, setFile] = useState(null)
-  const [removeImage, setRemoveImage] = useState(false)
+  const [variants, setVariants] = useState(() =>
+    [...(product?.product_variants ?? [])]
+      .sort((a, b) => a.position - b.position)
+      .map((v) => ({ key: key(), id: v.id, size: v.size, price: String(v.price), compare_at_price: v.compare_at_price ? String(v.compare_at_price) : '', stock_qty: String(v.stock_qty) })),
+  )
+  const [images, setImages] = useState(() =>
+    [...(product?.product_images ?? [])].sort((a, b) => a.position - b.position).map((i) => ({ key: key(), url: i.url, storage_path: i.storage_path })),
+  )
+  const [bulkPrice, setBulkPrice] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }))
-  const sizeList = useMemo(() => f.sizes.split(/[,،\s]+/).map((s) => s.trim()).filter(Boolean), [f.sizes])
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file])
-  const currentImage = preview || (removeImage ? null : product?.image_url)
+  const setVariant = (k, field, value) => setVariants((vs) => vs.map((v) => (v.key === k ? { ...v, [field]: value } : v)))
+  const sizesLower = useMemo(() => variants.map((v) => v.size.trim().toLowerCase()), [variants])
 
-  const toggleSize = (s) => {
-    const has = sizeList.some((x) => x.toLowerCase() === s.toLowerCase())
-    set('sizes', (has ? sizeList.filter((x) => x.toLowerCase() !== s.toLowerCase()) : [...sizeList, s]).join(', '))
+  const addSize = (size = '') => {
+    if (size && sizesLower.includes(size.toLowerCase())) return
+    const last = variants[variants.length - 1]
+    setVariants((vs) => [...vs, { key: key(), size, price: last?.price ?? '', compare_at_price: last?.compare_at_price ?? '', stock_qty: '' }])
+  }
+
+  const addFiles = (files) => {
+    const room = MAX_IMAGES - images.length
+    const picked = [...files].filter((f) => f.type.startsWith('image/')).slice(0, room)
+    if (files.length > room) notify(`أقصى عدد صور ${MAX_IMAGES}`, 'error')
+    setImages((imgs) => [...imgs, ...picked.map((file) => ({ key: key(), file, url: URL.createObjectURL(file) }))])
+  }
+  const moveImage = (i, dir) =>
+    setImages((imgs) => {
+      const j = i + dir
+      if (j < 0 || j >= imgs.length) return imgs
+      const next = [...imgs]
+      ;[next[i], next[j]] = [next[j], next[i]]
+      return next
+    })
+
+  const validate = () => {
+    if (!f.name_ar.trim()) return 'اكتب اسم المنتج بالعربي'
+    if (!f.category) return 'اختار القسم (أضف قسماً من تبويب الأقسام أولاً)'
+    if (!variants.length) return 'أضف مقاس واحد على الأقل (أو Free Size)'
+    const seen = new Set()
+    for (const v of variants) {
+      const size = v.size.trim()
+      if (!size) return 'في مقاس من غير اسم'
+      if (seen.has(size.toLowerCase())) return `المقاس ${size} مكرر`
+      seen.add(size.toLowerCase())
+      const price = toNumber(v.price)
+      const old = toNumber(v.compare_at_price)
+      if (!price) return `اكتب سعر المقاس ${size}`
+      if (old !== null && old <= price) return `في المقاس ${size}: السعر قبل الخصم لازم يكون أكبر من السعر`
+      if (toNumber(v.stock_qty) === null) return `اكتب الكمية المتاحة من المقاس ${size} (اكتب 0 لو خلصان)`
+    }
+    return ''
   }
 
   const save = async (e) => {
     e.preventDefault()
+    const problem = validate()
+    if (problem) return setError(problem)
     setError('')
-    const price = toNumber(f.price)
-    const oldPrice = toNumber(f.old_price)
-    if (!f.name_ar.trim()) return setError('اكتب اسم المنتج بالعربي')
-    if (!f.category) return setError('اختار القسم (أضف قسماً من تبويب الأقسام أولاً)')
-    if (price === null || price <= 0) return setError('اكتب السعر بالجنيه')
-    if (oldPrice !== null && oldPrice <= price) return setError('السعر قبل الخصم لازم يكون أكبر من السعر الحالي')
-    if (!sizeList.length) return setError('اختار مقاس واحد على الأقل (أو Free Size)')
-
     setSaving(true)
-    try {
-      let image_url = removeImage ? null : product?.image_url ?? null
-      let uploadedPath = null
 
-      if (file) {
-        const blob = await toWebp(file)
-        uploadedPath = `${crypto.randomUUID()}.webp`
-        const up = await supabase.storage.from(BUCKET).upload(uploadedPath, blob, { contentType: 'image/webp', cacheControl: '31536000' })
+    const uploaded = []
+    try {
+      // 1) upload new photos (shrunk to WebP first)
+      const finalImages = []
+      for (const img of images) {
+        if (!img.file) {
+          finalImages.push({ url: img.url, storage_path: img.storage_path ?? null })
+          continue
+        }
+        const blob = await toWebp(img.file)
+        const path = `${crypto.randomUUID()}.webp`
+        const up = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/webp', cacheControl: '31536000' })
         if (up.error) throw up.error
-        image_url = supabase.storage.from(BUCKET).getPublicUrl(uploadedPath).data.publicUrl
+        uploaded.push(path)
+        finalImages.push({ url: supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl, storage_path: path })
       }
 
-      const row = {
+      // 2) save everything in one checked database step
+      const payload = {
+        id: product?.id,
+        ...f,
         name_ar: f.name_ar.trim(),
         name_en: f.name_en.trim(),
-        category: f.category,
-        price,
-        old_price: oldPrice,
-        sizes: sizeList,
-        stock: f.stock,
-        is_new: f.is_new,
-        featured: f.featured,
-        active: f.active,
-        image_url,
-        art_type: f.art_type,
-        art_color: f.art_color,
-        art_bg: f.art_bg,
+        variants: variants.map((v) => ({
+          id: v.id,
+          size: v.size.trim(),
+          price: toNumber(v.price),
+          compare_at_price: toNumber(v.compare_at_price),
+          stock_qty: toNumber(v.stock_qty),
+        })),
+        images: finalImages,
       }
+      const { error: rpcError } = await supabase.rpc('admin_save_product', { payload })
+      if (rpcError) throw rpcError
 
-      const res = editing
-        ? await supabase.from('products').update(row).eq('id', product.id)
-        : await supabase.from('products').insert(row)
-      if (res.error) {
-        // don't leave an orphan photo behind if the row didn't save
-        if (uploadedPath) await supabase.storage.from(BUCKET).remove([uploadedPath])
-        throw res.error
-      }
-
-      // the old photo is no longer used
-      const oldPath = pathFromUrl(product?.image_url)
-      if (oldPath && (file || removeImage)) await supabase.storage.from(BUCKET).remove([oldPath])
+      // 3) photos the owner removed are no longer used anywhere
+      const kept = new Set(finalImages.map((i) => i.storage_path).filter(Boolean))
+      const removed = (product?.product_images ?? []).map((i) => i.storage_path).filter((p) => p && !kept.has(p))
+      if (removed.length) await supabase.storage.from(BUCKET).remove(removed)
 
       notify(editing ? 'تم حفظ التعديلات ✓' : 'تمت إضافة المنتج ✓')
       onSaved()
     } catch (err) {
-      setError(`تعذر الحفظ: ${err.message || 'حاول مرة أخرى'}`)
+      if (uploaded.length) await supabase.storage.from(BUCKET).remove(uploaded) // don't leave orphan photos
+      setError(`تعذر الحفظ: ${explain(err.message)}`)
       setSaving(false)
     }
   }
 
   return (
     <Modal title={editing ? 'تعديل منتج' : 'منتج جديد'} onClose={onClose}>
-      <form onSubmit={save} className="grid gap-5">
-        {/* photo */}
-        <div>
-          <p className="field-label">صورة المنتج</p>
-          <div className="flex items-center gap-4">
-            <div className="size-28 shrink-0 overflow-hidden rounded-2xl ring-1 ring-line">
-              {currentImage ? (
-                <img src={currentImage} alt="" className="size-full object-cover" />
-              ) : (
-                <GarmentArt type={f.art_type} color={f.art_color} bg={f.art_bg} className="size-full p-2" />
-              )}
-            </div>
-            <div className="grid gap-2">
-              <label className="btn btn-ink h-11 cursor-pointer px-5 text-sm">
-                {currentImage ? 'تغيير الصورة' : 'رفع صورة'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={(e) => { setFile(e.target.files?.[0] ?? null); setRemoveImage(false) }}
-                />
-              </label>
-              {currentImage && (
-                <button type="button" onClick={() => { setFile(null); setRemoveImage(true) }} className="text-sm font-bold text-muted hover:text-brand">
-                  حذف الصورة
-                </button>
-              )}
-              <p className="text-xs text-muted">الصورة بتتصغر أوتوماتيك عشان الموقع يفضل سريع.</p>
-            </div>
+      <form onSubmit={save} className="grid gap-6">
+        {/* ---------- photos ---------- */}
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="field-label mb-0">الصور ({images.length}/{MAX_IMAGES})</p>
+            <p className="text-xs text-muted">الصورة الأولى هي الرئيسية</p>
           </div>
-        </div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {images.map((img, i) => (
+              <div key={img.key} className="relative overflow-hidden rounded-2xl ring-1 ring-line">
+                <img src={img.url} alt={`صورة ${i + 1}`} className="aspect-[4/5] w-full object-cover" />
+                {i === 0 && <span className="badge absolute start-1.5 top-1.5 bg-brand text-white">رئيسية</span>}
+                <button type="button" onClick={() => setImages((x) => x.filter((y) => y.key !== img.key))} aria-label={`حذف الصورة ${i + 1}`} className="absolute end-1.5 top-1.5 grid size-8 place-items-center rounded-full bg-white/90 text-ink shadow hover:text-brand">
+                  <CloseIcon className="size-4" />
+                </button>
+                <div className="absolute inset-x-1.5 bottom-1.5 flex justify-between">
+                  <button type="button" disabled={i === 0} onClick={() => moveImage(i, -1)} aria-label="تحريك للأمام" className="grid size-8 place-items-center rounded-full bg-white/90 shadow disabled:opacity-0">
+                    <ArrowIcon className="size-4 -scale-x-100 rtl:scale-x-100" />
+                  </button>
+                  <button type="button" disabled={i === images.length - 1} onClick={() => moveImage(i, 1)} aria-label="تحريك للخلف" className="grid size-8 place-items-center rounded-full bg-white/90 shadow disabled:opacity-0">
+                    <ArrowIcon className="size-4 rtl:-scale-x-100" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {images.length < MAX_IMAGES && (
+              <label className="grid aspect-[4/5] cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-line text-center text-sm font-bold text-muted hover:border-ink hover:text-ink">
+                <span>
+                  <PlusIcon className="mx-auto mb-1 size-6" />
+                  إضافة صور
+                </span>
+                <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
+              </label>
+            )}
+          </div>
+          {!images.length && (
+            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-paper p-3">
+              <GarmentArt type={f.art_type} color={f.art_color} bg={f.art_bg} className="size-16 shrink-0 rounded-xl p-1" />
+              <div className="grid flex-1 grid-cols-3 gap-2">
+                <select aria-label="شكل الرسمة البديلة" className="field h-10 bg-white px-2 text-sm" value={f.art_type} onChange={(e) => set('art_type', e.target.value)}>
+                  {ART_TYPES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                </select>
+                <input aria-label="لون القطعة" type="color" value={f.art_color} onChange={(e) => set('art_color', e.target.value)} className="h-10 w-full cursor-pointer rounded-xl border border-line bg-white p-1" />
+                <input aria-label="لون الخلفية" type="color" value={f.art_bg} onChange={(e) => set('art_bg', e.target.value)} className="h-10 w-full cursor-pointer rounded-xl border border-line bg-white p-1" />
+              </div>
+            </div>
+          )}
+        </section>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+        {/* ---------- basics ---------- */}
+        <section className="grid gap-4 sm:grid-cols-3">
+          <div className="sm:col-span-1">
             <label htmlFor="p-ar" className="field-label">اسم المنتج (عربي) *</label>
             <input id="p-ar" className="field" value={f.name_ar} onChange={(e) => set('name_ar', e.target.value)} />
           </div>
           <div>
-            <label htmlFor="p-en" className="field-label">الاسم بالإنجليزي (اختياري)</label>
+            <label htmlFor="p-en" className="field-label">بالإنجليزي (اختياري)</label>
             <input id="p-en" dir="ltr" className="field" value={f.name_en} onChange={(e) => set('name_en', e.target.value)} />
           </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label htmlFor="p-cat" className="field-label">القسم *</label>
             <select id="p-cat" className="field" value={f.category} onChange={(e) => set('category', e.target.value)}>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
             </select>
           </div>
-          <div>
-            <label htmlFor="p-price" className="field-label">السعر (ج.م) *</label>
-            <input id="p-price" inputMode="numeric" className="field" value={f.price} onChange={(e) => set('price', e.target.value)} />
-          </div>
-          <div>
-            <label htmlFor="p-old" className="field-label">السعر قبل الخصم</label>
-            <input id="p-old" inputMode="numeric" className="field" placeholder="اختياري" value={f.old_price} onChange={(e) => set('old_price', e.target.value)} />
-          </div>
-        </div>
+        </section>
 
-        <div>
-          <label htmlFor="p-sizes" className="field-label">المقاسات المتاحة *</label>
-          <div className="mb-2 flex flex-wrap gap-1.5">
+        {/* ---------- sizes ---------- */}
+        <section>
+          <p className="field-label">المقاسات والأسعار والكميات *</p>
+          <div className="mb-3 flex flex-wrap gap-1.5">
             {QUICK_SIZES.map((s) => (
-              <button key={s} type="button" className="size-chip" aria-pressed={sizeList.some((x) => x.toLowerCase() === s.toLowerCase())} onClick={() => toggleSize(s)}>
-                {s}
+              <button key={s} type="button" className="size-chip" aria-pressed={sizesLower.includes(s.toLowerCase())} onClick={() => addSize(s)}>
+                + {s}
               </button>
             ))}
+            <button type="button" className="size-chip" onClick={() => addSize('')}>+ مقاس آخر</button>
           </div>
-          <input id="p-sizes" dir="ltr" className="field" placeholder="S, M, L أو 30, 32, 34" value={f.sizes} onChange={(e) => set('sizes', e.target.value)} />
-        </div>
 
-        <div>
-          <p className="field-label">التوفر</p>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="التوفر">
-            {Object.entries(STOCK).map(([k, label]) => (
-              <button key={k} type="button" role="radio" aria-checked={f.stock === k} onClick={() => set('stock', k)} className="filter-tab" aria-selected={f.stock === k}>
-                {label}
+          {variants.length > 1 && (
+            <div className="mb-3 flex items-end gap-2 rounded-2xl bg-paper p-3">
+              <div className="flex-1">
+                <label htmlFor="bulk" className="field-label text-xs">سعر واحد لكل المقاسات</label>
+                <input id="bulk" inputMode="numeric" className="field h-10 bg-white" value={bulkPrice} onChange={(e) => setBulkPrice(e.target.value)} />
+              </div>
+              <button type="button" className="btn btn-ink h-10 px-4 text-sm" onClick={() => toNumber(bulkPrice) && setVariants((vs) => vs.map((v) => ({ ...v, price: String(toNumber(bulkPrice)) })))}>
+                تطبيق
               </button>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
 
-        <div className="grid gap-2 sm:grid-cols-3">
+          {variants.length === 0 ? (
+            <p className="rounded-2xl bg-paper p-4 text-center text-sm text-muted">اختار مقاس من فوق</p>
+          ) : (
+            <ul className="grid gap-2">
+              {variants.map((v) => (
+                <li key={v.key} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+                  <Field label="المقاس" id={`s-${v.key}`} dir="ltr" value={v.size} onChange={(x) => setVariant(v.key, 'size', x)} />
+                  <Field label="السعر (ج.م)" id={`pr-${v.key}`} numeric value={v.price} onChange={(x) => setVariant(v.key, 'price', x)} />
+                  <button type="button" onClick={() => setVariants((vs) => vs.filter((y) => y.key !== v.key))} aria-label={`حذف المقاس ${v.size}`} className="row-span-2 grid size-10 place-items-center self-center rounded-full text-muted hover:bg-paper hover:text-brand sm:row-span-1 sm:col-start-5">
+                    <TrashIcon className="size-5" />
+                  </button>
+                  <Field label="قبل الخصم" id={`cp-${v.key}`} numeric placeholder="اختياري" value={v.compare_at_price} onChange={(x) => setVariant(v.key, 'compare_at_price', x)} />
+                  <Field label="الكمية" id={`q-${v.key}`} numeric value={v.stock_qty} onChange={(x) => setVariant(v.key, 'stock_qty', x)} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="grid gap-2 sm:grid-cols-3">
           <Check label="يظهر في «وصل حديثاً»" checked={f.is_new} onChange={(v) => set('is_new', v)} />
           <Check label="منتج مميز (يظهر أولاً)" checked={f.featured} onChange={(v) => set('featured', v)} />
           <Check label="ظاهر في الموقع" checked={f.active} onChange={(v) => set('active', v)} />
-        </div>
-
-        {!currentImage && (
-          <details className="rounded-2xl bg-paper p-4">
-            <summary className="cursor-pointer font-bold">الرسمة البديلة (لو مفيش صورة)</summary>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <div>
-                <label htmlFor="a-type" className="field-label">الشكل</label>
-                <select id="a-type" className="field bg-white" value={f.art_type} onChange={(e) => set('art_type', e.target.value)}>
-                  {ART_TYPES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                </select>
-              </div>
-              <ColorField id="a-color" label="لون القطعة" value={f.art_color} onChange={(v) => set('art_color', v)} />
-              <ColorField id="a-bg" label="لون الخلفية" value={f.art_bg} onChange={(v) => set('art_bg', v)} />
-            </div>
-          </details>
-        )}
+        </section>
 
         {error && <p role="alert" className="rounded-2xl bg-brand/10 p-3 font-bold text-brand">{error}</p>}
 
-        <div className="flex gap-3">
+        <div className="sticky bottom-0 -mx-5 -mb-5 flex gap-3 border-t border-line bg-white p-4">
           <button type="submit" disabled={saving} className="btn btn-red h-12 flex-1 text-lg">{saving ? 'جاري الحفظ…' : 'حفظ'}</button>
           <button type="button" onClick={onClose} className="btn h-12 border border-line px-6 hover:border-ink">إلغاء</button>
         </div>
       </form>
     </Modal>
+  )
+}
+
+function Field({ label, id, numeric, onChange, ...rest }) {
+  return (
+    <div className="min-w-0">
+      <label htmlFor={id} className="mb-1 block text-xs font-bold text-muted">{label}</label>
+      <input id={id} inputMode={numeric ? 'numeric' : undefined} className="field h-10 px-3" onChange={(e) => onChange(e.target.value)} {...rest} />
+    </div>
   )
 }
 

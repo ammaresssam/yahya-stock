@@ -3,6 +3,7 @@ import { DataContext } from './contexts'
 import { categories as localCategories, products as localProducts } from '../data/products'
 import { site } from '../data/site'
 import { SUPABASE_KEY, SUPABASE_URL, dbConfigured } from './config'
+import { fromDemo, fromRow } from './product'
 
 // Database rows → the shape the components already use
 export const rowToCategory = (r) => ({
@@ -11,19 +12,13 @@ export const rowToCategory = (r) => ({
   art: { type: r.art_type, color: r.art_color, bg: r.art_bg },
 })
 
-export const rowToProduct = (r) => ({
-  id: r.id,
-  name: { ar: r.name_ar, en: r.name_en || r.name_ar },
-  category: r.category,
-  price: r.price,
-  oldPrice: r.old_price ?? undefined,
-  sizes: r.sizes || [],
-  stock: r.stock,
-  isNew: !!r.is_new,
-  featured: !!r.featured,
-  image: r.image_url || undefined,
-  art: { type: r.art_type, color: r.art_color, bg: r.art_bg },
-})
+const demoProducts = localProducts.map(fromDemo)
+
+// Each product comes with its sizes (price + stock) and photos embedded.
+// Row Level Security already hides inactive sizes and hidden products from visitors.
+const PRODUCTS_QUERY =
+  'products?select=*,product_variants(id,size,price,compare_at_price,stock_qty,position,active),product_images(url,position)' +
+  '&active=eq.true&order=created_at.desc'
 
 // The public site only needs read access, so it talks to the REST API directly
 // instead of loading the whole Supabase library.
@@ -39,7 +34,7 @@ export function DataProvider({ children }) {
   const [state, setState] = useState({
     loading: dbConfigured,
     error: false,
-    products: dbConfigured ? [] : localProducts,
+    products: dbConfigured ? [] : demoProducts,
     categories: dbConfigured ? [] : localCategories,
   })
 
@@ -49,9 +44,9 @@ export function DataProvider({ children }) {
     try {
       const [cats, prods] = await Promise.all([
         rest('categories?select=*&order=created_at.asc'),
-        rest('products?select=*&active=eq.true&order=created_at.desc'),
+        rest(PRODUCTS_QUERY),
       ])
-      setState({ loading: false, error: false, categories: cats.map(rowToCategory), products: prods.map(rowToProduct) })
+      setState({ loading: false, error: false, categories: cats.map(rowToCategory), products: prods.map(fromRow).filter((p) => p.variants.length) })
     } catch {
       setState({ loading: false, error: true, categories: [], products: [] })
     }

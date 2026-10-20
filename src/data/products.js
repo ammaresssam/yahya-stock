@@ -12,8 +12,10 @@
 //   category  قسم المنتج (لازم يكون من الأقسام اللي تحت: men / women)
 //   price     السعر بالجنيه
 //   oldPrice  السعر قبل الخصم (اختياري — امسحه لو مفيش خصم)
-//   sizes     المقاسات المتاحة
+//   sizes     المقاسات المتاحة (كلها بنفس السعر)
 //   stock     'in' = متاح  |  'low' = كمية محدودة  |  'out' = نفدت الكمية
+//   variants  (بدل price/sizes/stock) لو كل مقاس ليه سعر وكمية: [{ size, price, compareAt?, stock }]
+//   ⚠️ لما الداتابيز تتوصل، المنتجات بتتعدل من لوحة التحكم مش من الملف ده
 //   isNew     true = يظهر في "وصل حديثاً"
 //   featured  true = يظهر في أول القائمة
 //   image     مسار صورة حقيقية داخل مجلد public مثل '/products/shirt-1.jpg'
@@ -67,9 +69,14 @@ export const products = [
     id: 'm-04',
     name: { ar: 'بنطلون جينز', en: 'Denim Jeans' },
     category: 'men',
-    price: 400,
-    sizes: ['30', '32', '34', '36', '38'],
-    stock: 'in',
+    // مثال: كل مقاس بسعر وكمية مختلفة — Example: each size with its own price and quantity
+    variants: [
+      { size: '30', price: 380, stock: 4 },
+      { size: '32', price: 400, stock: 2 },
+      { size: '34', price: 400, stock: 0 },
+      { size: '36', price: 420, compareAt: 550, stock: 6 },
+      { size: '38', price: 450, stock: 1 },
+    ],
     isNew: false,
     featured: false,
     art: { type: 'pants', color: '#3d5a80', bg: '#e4e8ee' },

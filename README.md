@@ -54,12 +54,15 @@ When deploying (below), add the same two variables in your host's *Environment v
 
 Open `your-site.com/#/admin` (bookmark it on the owner's phone). The link is not shown anywhere on the public site.
 
-- **Add a product:** *منتج جديد* → name, category, price, sizes, availability, photo → *حفظ*. It appears on the site immediately.
-- **Change availability:** the dropdown on each product row (متاح / كمية محدودة / نفدت الكمية) saves instantly.
+- **Add a product:** *منتج جديد* → photos, name, category, then the sizes → *حفظ*. It appears on the site immediately.
+- **Sizes:** each size has its own **price**, optional **before-discount price** and **quantity**. Tap the quick buttons (S, M, L, …) or *+ مقاس آخر* for any size (e.g. 32, 4 years). *سعر واحد لكل المقاسات* fills the same price into every size.
+- **Photos:** up to 8 per product, straight from the phone camera or gallery. The first one is the main photo; use the arrows to reorder. They are resized and converted to WebP automatically (max 1000px, typically under 100 KB). Customers can tap a product photo to see them all.
+- **Stock:** the *المخزون* tab lists every size of every product. Use + / − or type a number and press *حفظ*. *قرّب يخلص أو خلص* shows only sizes with 3 or fewer pieces left. In the shop, sold-out sizes can't be chosen, a size with 3 or fewer shows "متبقي N فقط", and customers can't add more than the available quantity to the cart.
 - **Hide a product** without deleting it: *إخفاء* (e.g. when you don't have it today).
-- **Discount:** fill in *السعر قبل الخصم*. The site shows the percentage off automatically.
-- **Photos:** upload straight from the phone camera or gallery. They are resized and converted to WebP automatically (max 1000px, typically under 100 KB).
+- **Discount:** fill in *قبل الخصم* on a size. The site shows the percentage off automatically.
 - **Categories:** the *الأقسام* tab. A category can only be deleted once it has no products.
+
+Saving a product is one all-or-nothing database step (`admin_save_product`). The database checks that the account is an admin, that every price is above zero, that quantities aren't negative, that the before-discount price is higher, that no size is repeated, and that there are no more than 8 photos. If anything is wrong, nothing is changed.
 
 ### What is still edited in code
 
@@ -91,6 +94,7 @@ supabase/migrations/       database tables and security rules, one numbered file
 tests/                     automated database security tests (`npm test`)
 src/data/site.js           shop details (address, phones, hours, social)
 src/data/products.js       demo products (used only when no database is connected)
+src/lib/product.js         turns database rows / demo entries into one product shape (sizes, prices, stock, photos)
 src/lib/store.jsx          loads products/categories (database or demo file)
 src/lib/i18n.jsx           all Arabic/English text, hero headlines
 src/components/            public site sections
@@ -102,8 +106,7 @@ To try the admin panel without a database while developing: `npm run dev`, open 
 
 ## Limits to know about
 
-- Stock is a status (available / limited / sold out), not a counted quantity, and orders go to WhatsApp rather than being stored. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
-- Each product has one photo.
+- Orders still go to WhatsApp and aren't stored yet; online checkout comes in the next stages. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
 - The product list is loaded once per visit; customers see changes on their next page load.
 
 ## Tech

@@ -38,7 +38,7 @@ export default function CartDrawer() {
 
   const message = () => {
     const lines = cart.lines.map(
-      (l, i) => `${i + 1}) ${pick(l.product.name)} — ${t('size')} ${l.size} × ${l.qty} — ${price(l.product.price * l.qty)}`,
+      (l, i) => `${i + 1}) ${pick(l.product.name)} — ${t('size')} ${l.size} × ${l.qty} — ${price(l.unitPrice * l.qty)}`,
     )
     return [
       t('orderIntro'),
@@ -94,6 +94,12 @@ export default function CartDrawer() {
           </div>
         ) : (
           <>
+            {cart.adjusted && (
+              <p role="status" className="mx-5 mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-800">
+                {t('cartStockIssue')}
+                <button type="button" onClick={cart.clearAdjusted} className="ms-2 underline">{t('ok')}</button>
+              </p>
+            )}
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {cart.lines.map((l) => (
                 <li key={l.id + l.size} className="flex gap-3 py-4">
@@ -105,13 +111,14 @@ export default function CartDrawer() {
                   <div className="min-w-0 flex-1">
                     <p className="font-extrabold text-ink">{pick(l.product.name)}</p>
                     <p className="text-sm text-muted">{t('size')}: <b className="text-ink">{l.size}</b></p>
+                    {l.qty >= l.available && <p className="text-xs font-bold text-amber-600">{t('leftOnly')(num(l.available))}</p>}
                     <div className="mt-2 flex items-center justify-between">
                       <div className="flex items-center rounded-full ring-1 ring-line">
-                        <button type="button" className="qty-btn" aria-label={t('increase')} onClick={() => cart.setQty(l.id, l.size, l.qty + 1)}><PlusIcon className="size-4" /></button>
+                        <button type="button" className="qty-btn disabled:opacity-30" disabled={l.qty >= l.available} aria-label={t('increase')} onClick={() => cart.setQty(l.id, l.size, l.qty + 1)}><PlusIcon className="size-4" /></button>
                         <span className="w-7 text-center font-bold" aria-label={t('qty')}>{num(l.qty)}</span>
                         <button type="button" className="qty-btn" aria-label={t('decrease')} onClick={() => cart.setQty(l.id, l.size, l.qty - 1)}><MinusIcon className="size-4" /></button>
                       </div>
-                      <span className="font-black text-brand">{price(l.product.price * l.qty)}</span>
+                      <span className="font-black text-brand">{price(l.unitPrice * l.qty)}</span>
                     </div>
                   </div>
                   <button type="button" onClick={() => cart.setQty(l.id, l.size, 0)} aria-label={`${t('remove')} ${pick(l.product.name)}`} className="grid size-9 shrink-0 place-items-center self-start rounded-full text-muted hover:bg-paper hover:text-brand">

@@ -3,20 +3,29 @@ import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
 import { waLink } from '../lib/links'
 import { useData } from '../lib/store'
+import { LOW_STOCK } from '../lib/product'
 import GarmentArt from './GarmentArt'
-import { BagIcon, WhatsAppIcon } from './Icons'
+import Gallery from './Gallery'
+import { BagIcon, CameraIcon, WhatsAppIcon } from './Icons'
 
 export default function ProductCard({ product: p, className = '' }) {
   const { t, pick, price, num } = useLang()
   const cart = useCart()
   const { live } = useData()
-  const [size, setSize] = useState(p.sizes.length === 1 ? p.sizes[0] : null)
-  const [hint, setHint] = useState(false)
+  const inStock = p.variants.filter((v) => v.stock > 0)
+  const [size, setSize] = useState(inStock.length === 1 && p.variants.length === 1 ? inStock[0].size : null)
+  const [hint, setHint] = useState(null) // null | 'pick' | 'max'
   const [added, setAdded] = useState(false)
+  const [gallery, setGallery] = useState(null) // index of the photo to open, or null
   const sizesId = useId()
   const name = pick(p.name)
-  const sold = p.stock === 'out'
-  const off = p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : 0
+  const sold = p.totalStock === 0
+  const chosen = p.variants.find((v) => v.size === size)
+
+  // price shown follows the chosen size; before a choice, the lowest available price
+  const shownPrice = chosen ? chosen.price : p.price
+  const shownOld = chosen ? chosen.compareAt : p.oldPrice
+  const off = shownOld ? Math.round((1 - shownPrice / shownOld) * 100) : 0
 
   useEffect(() => {
     if (!added) return
@@ -25,31 +34,51 @@ export default function ProductCard({ product: p, className = '' }) {
   }, [added])
 
   const add = () => {
-    if (!size) return setHint(true)
-    cart.add(p.id, size)
+    if (!chosen) return setHint('pick')
+    if (!cart.add(p.id, chosen.size)) return setHint('max')
+    setHint(null)
     setAdded(true)
   }
 
-  const stockLabel = { in: t('inStock'), low: t('lowStock'), out: t('outStock') }[p.stock]
-  const stockDot = { in: 'bg-emerald-500', low: 'bg-amber-500', out: 'bg-neutral-400' }[p.stock]
+  const status = chosen
+    ? chosen.stock === 0 ? 'out' : chosen.stock <= LOW_STOCK ? 'low' : 'in'
+    : p.stock
+  const stockLabel =
+    chosen && status === 'low' ? t('leftOnly')(num(chosen.stock)) : { in: t('inStock'), low: t('lowStock'), out: t('outStock') }[status]
+  const stockDot = { in: 'bg-emerald-500', low: 'bg-amber-500', out: 'bg-neutral-400' }[status]
+  const many = p.images.length > 1
 
   return (
     <article className={`product-card group flex flex-col overflow-hidden rounded-[24px] bg-white ring-1 ring-line ${className}`}>
       <div className="relative">
         {p.image ? (
-          <img src={p.image} alt={name} loading="lazy" decoding="async" width="600" height="750" className="product-media aspect-[4/5] w-full object-cover" />
+          <button
+            type="button"
+            onClick={() => setGallery(0)}
+            className="relative block w-full overflow-hidden"
+            aria-label={many ? `${name} — ${t('viewPhotos')(num(p.images.length))}` : name}
+          >
+            <img src={p.image} alt={name} loading="lazy" decoding="async" width="600" height="750" className="product-media aspect-[4/5] w-full object-cover" />
+            {/* second photo shows on hover (desktop) */}
+            {many && (
+              <img src={p.images[1]} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            )}
+          </button>
         ) : (
           <GarmentArt {...p.art} label={`${name} — ${t('illustration')}`} className="product-media aspect-[4/5] p-7" />
         )}
 
-        <div className="absolute inset-x-3 top-3 flex flex-wrap items-start gap-1.5">
+        <div className="pointer-events-none absolute inset-x-3 top-3 flex flex-wrap items-start gap-1.5">
           {p.isNew && <span className="badge bg-ink text-white">{t('newBadge')}</span>}
           {off > 0 && <span className="badge bg-brand text-white">{t('off')(num(off))}</span>}
         </div>
-        {!live && <span className="badge absolute bottom-3 end-3 bg-white/90 text-ink ring-1 ring-black/5">{t('sample')}</span>}
+        <div className="pointer-events-none absolute bottom-3 end-3 flex gap-1.5">
+          {many && <span className="badge inline-flex items-center gap-1 bg-ink/80 text-white"><CameraIcon className="size-3" />{num(p.images.length)}</span>}
+          {!live && <span className="badge bg-white/90 text-ink ring-1 ring-black/5">{t('sample')}</span>}
+        </div>
 
         {sold && (
-          <div className="absolute inset-0 grid place-items-center bg-white/55 backdrop-blur-[1px]">
+          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-white/55 backdrop-blur-[1px]">
             <span className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-white">{t('outStock')}</span>
           </div>
         )}
@@ -70,9 +99,11 @@ export default function ProductCard({ product: p, className = '' }) {
           </a>
         </div>
 
-        <p className="mt-1 flex items-baseline gap-2">
-          <span className="text-lg font-black text-brand sm:text-xl">{price(p.price)}</span>
-          {p.oldPrice && <s className="text-sm font-semibold text-muted">{price(p.oldPrice)}</s>}
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-2" aria-live="polite">
+          <span className="text-lg font-black text-brand sm:text-xl">
+            {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
+          </span>
+          {shownOld && <s className="text-sm font-semibold text-muted">{price(shownOld)}</s>}
         </p>
 
         <p className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-muted">
@@ -83,21 +114,23 @@ export default function ProductCard({ product: p, className = '' }) {
         <div className="mt-3">
           <p id={sizesId} className="mb-1.5 text-xs font-bold text-muted">{t('chooseSize')}</p>
           <div role="group" aria-labelledby={sizesId} className="flex flex-wrap gap-1.5">
-            {p.sizes.map((s) => (
+            {p.variants.map((v) => (
               <button
-                key={s}
+                key={v.id}
                 type="button"
-                disabled={sold}
-                aria-pressed={size === s}
-                onClick={() => { setSize(s); setHint(false) }}
-                className="size-chip"
+                disabled={v.stock === 0}
+                aria-pressed={size === v.size}
+                title={v.stock === 0 ? t('sizeSoldOut') : undefined}
+                aria-label={v.stock === 0 ? `${v.size} — ${t('sizeSoldOut')}` : v.size}
+                onClick={() => { setSize(v.size); setHint(null) }}
+                className={`size-chip ${v.stock === 0 ? 'line-through' : ''}`}
               >
-                {s}
+                {v.size}
               </button>
             ))}
           </div>
           <p className={`mt-1.5 h-4 text-xs font-bold text-brand transition-opacity ${hint ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">
-            {hint ? t('pickSizeFirst') : ''}
+            {hint === 'pick' ? t('pickSizeFirst') : hint === 'max' ? t('maxInCart') : ''}
           </p>
         </div>
 
@@ -111,6 +144,8 @@ export default function ProductCard({ product: p, className = '' }) {
           {sold ? t('outStock') : added ? t('added') : t('addToCart')}
         </button>
       </div>
+
+      {gallery !== null && <Gallery images={p.images} name={name} start={gallery} onClose={() => setGallery(null)} />}
     </article>
   )
 }
