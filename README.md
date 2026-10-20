@@ -94,7 +94,7 @@ Checkout runs on Supabase's servers as an **Edge Function** (`supabase/functions
    After the site has its real address, set both `SITE_ORIGINS` and `SITE_URL` to it (e.g. `https://yahyastock.com`). `SITE_ORIGINS` may list several addresses separated by commas.
    `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided to the function by Supabase automatically; don't set or copy them anywhere.
 3. Deploy the function: `supabase functions deploy checkout`. The setting `verify_jwt = false` in `supabase/config.toml` lets customers check out without an account; the function checks everything itself.
-4. **Set the real delivery fees.** The fees in the database (Alexandria 50, Cairo 75, …) are **placeholders**. Change them in *Table Editor → shipping_zones* (an admin screen for this comes in Stage 3).
+4. **Set the real delivery fees.** The fees in the database (Alexandria 50, Cairo 75, …) are **placeholders**. Change them in the admin panel → *التوصيل*.
 
 The cart then shows *إتمام الطلب* (checkout). Customers fill in their name, mobile, governorate, area and address and choose cash on delivery. The order is saved, the stock is reserved, and they land on a private tracking page (`/#/order/…`). Ordering on WhatsApp stays available as a second option.
 
@@ -116,6 +116,14 @@ Everything resets when it stops. It's for trying and demoing only; never deploy 
 
 Open `your-site.com/#/admin` (bookmark it on the owner's phone). The link is not shown anywhere on the public site.
 
+- **Orders (الطلبات, the first tab):** every order from the website, newest first. Filter by status, or search by order number, name or phone. It refreshes every minute.
+  - Open an order to see the customer's full name, phone, address and notes, with buttons to **call** them or **send a ready-made WhatsApp message** for the current step.
+  - Move it along with one tap: *تأكيد الطلب* → *بدء التجهيز* → *تسليم للمندوب* → *تم التوصيل*. Only the valid next step is offered, and an optional note is saved in the order's history.
+  - *إلغاء الطلب* (before delivery, including a parcel that comes back) **puts the pieces back in stock automatically, once**.
+  - For cash on delivery, *تم التوصيل* records the cash as collected. A card order is never marked paid by hand; only the verified payment confirmation can do that (Stage 4).
+  - The customer's tracking page shows each step as it happens.
+  - If two people change the same order at the same time, the second one is told it changed and the screen refreshes.
+- **Delivery (التوصيل):** change the fee for each governorate, switch a zone off (customers stop seeing it), or add a new one. A new fee applies to new orders only.
 - **Add a product:** *منتج جديد* → photos, name, category, then the sizes → *حفظ*. It appears on the site immediately.
 - **Sizes:** each size has its own **price**, optional **before-discount price** and **quantity**. Tap the quick buttons (S, M, L, …) or *+ مقاس آخر* for any size (e.g. 32, 4 years). *سعر واحد لكل المقاسات* fills the same price into every size.
 - **Photos:** up to 8 per product, straight from the phone camera or gallery. The first one is the main photo; use the arrows to reorder. They are resized and converted to WebP automatically (max 1000px, typically under 100 KB). Customers can tap a product photo to see them all.
@@ -146,7 +154,7 @@ Environment variables are baked in at build time, so re-deploy after changing th
 - [ ] Owner confirms the address (then set `addressConfirmed: true` to show the map and directions), phone numbers, WhatsApp number and opening hours (`site.js`)
 - [ ] Facebook / Instagram / TikTok links added (the Facebook QR on the sign has no readable URL)
 - [ ] Real products and photos added through the admin panel
-- [ ] **Real delivery fees** set in `shipping_zones` (the current ones are placeholders)
+- [ ] **Real delivery fees** set in the admin panel → *التوصيل* (the current ones are placeholders)
 - [ ] Checkout function deployed, `SITE_ORIGINS` / `SITE_URL` set to the real site address, and one real test order placed and checked in the database
 - [ ] Owner confirms the claims in the rotating hero headlines ("براندات", "كل أسبوع", "أطفال") are true. Edit them in `src/lib/i18n.jsx` (`heroTitles`)
 - [ ] Add a 1200×630 PNG social-share image and an `og:image` tag
@@ -174,7 +182,7 @@ To try the admin panel without a database while developing: `npm run dev`, open 
 
 ## Limits to know about
 
-- Order management in the admin panel (seeing orders, changing their status) comes in Stage 3, and card payments in Stage 4. Until then, read orders in Supabase → *Table Editor → orders*. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
+- Card payments come in Stage 4. Refunds of card payments are done in the payment provider's dashboard, not on this site. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
 - The product list is loaded once per visit; customers see changes on their next page load.
 
 ## Tech

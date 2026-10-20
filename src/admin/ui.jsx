@@ -57,3 +57,39 @@ export function Toast({ toast }) {
     </div>
   )
 }
+
+// ---------- orders ----------
+export const ORDER_STATUS = {
+  pending_payment: { label: 'في انتظار الدفع', cls: 'bg-amber-100 text-amber-900' },
+  placed: { label: 'جديد', cls: 'bg-brand text-white' },
+  confirmed: { label: 'مؤكد', cls: 'bg-sky-100 text-sky-900' },
+  preparing: { label: 'جاري التجهيز', cls: 'bg-violet-100 text-violet-900' },
+  shipped: { label: 'مع المندوب', cls: 'bg-indigo-100 text-indigo-900' },
+  delivered: { label: 'تم التوصيل', cls: 'bg-emerald-100 text-emerald-900' },
+  cancelled: { label: 'ملغي', cls: 'bg-paper text-muted line-through' },
+  payment_failed: { label: 'الدفع فشل', cls: 'bg-paper text-muted' },
+}
+export const PAY_STATUS = { unpaid: 'لم يُدفع', pending: 'في انتظار الدفع', paid: 'مدفوع', failed: 'فشل الدفع', refunded: 'مسترد' }
+export const PAY_METHOD = { cod: 'عند الاستلام', card: 'بطاقة' }
+
+// Mirrors public.order_next_statuses() so the panel only offers valid buttons.
+// The database checks again — this list is only for display.
+export const NEXT_STATUS = {
+  placed: ['confirmed', 'cancelled'],
+  confirmed: ['preparing', 'cancelled'],
+  preparing: ['shipped', 'cancelled'],
+  shipped: ['delivered', 'cancelled'],
+  pending_payment: ['cancelled'],
+}
+export const ACTION_LABEL = {
+  confirmed: 'تأكيد الطلب',
+  preparing: 'بدء التجهيز',
+  shipped: 'تسليم للمندوب',
+  delivered: 'تم التوصيل',
+  cancelled: 'إلغاء الطلب',
+}
+
+export function StatusPill({ status }) {
+  const s = ORDER_STATUS[status] ?? { label: status, cls: 'bg-paper text-ink' }
+  return <span className={`badge ${s.cls}`}>{s.label}</span>
+}

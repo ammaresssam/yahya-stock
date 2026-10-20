@@ -20,6 +20,25 @@ export function createMock() {
       { id: 'v3', product_id: 'p2', size: 'S', price: 450, compare_at_price: null, stock_qty: 0, position: 0 },
     ],
     product_images: [],
+    shipping_zones: [
+      { id: 'alexandria', name_ar: 'الإسكندرية', name_en: 'Alexandria', fee: 50, active: true, position: 0 },
+      { id: 'cairo', name_ar: 'القاهرة والجيزة', name_en: 'Cairo and Giza', fee: 75, active: true, position: 1 },
+      { id: 'upper', name_ar: 'الصعيد', name_en: 'Upper Egypt', fee: 90, active: true, position: 2 },
+    ],
+    orders: [
+      { id: 'o1', order_number: 10001, customer_name: 'أحمد علي', phone: '01012345678', email: null, zone_id: 'alexandria', area: 'ميامي', address: '12 شارع خالد بن الوليد، الدور الثالث', notes: 'اتصل قبل ما تيجي', payment_method: 'cod', status: 'placed', payment_status: 'unpaid', subtotal: 600, shipping_fee: 50, total: 650, stock_released: false, created_at: new Date(Date.now() - 36e5).toISOString() },
+      { id: 'o2', order_number: 10002, customer_name: 'منى حسن', phone: '01155555555', email: null, zone_id: 'cairo', area: 'مدينة نصر', address: 'شارع عباس العقاد، عمارة 5', notes: null, payment_method: 'cod', status: 'shipped', payment_status: 'unpaid', subtotal: 320, shipping_fee: 75, total: 395, stock_released: false, created_at: new Date(Date.now() - 864e5).toISOString() },
+    ],
+    order_items: [
+      { id: 'i1', order_id: 'o1', variant_id: 'v1', product_name_ar: 'قميص تجريبي', size: 'M', unit_price: 300, qty: 2, line_total: 600 },
+      { id: 'i2', order_id: 'o2', variant_id: 'v2', product_name_ar: 'قميص تجريبي', size: 'L', unit_price: 320, qty: 1, line_total: 320 },
+    ],
+    order_status_history: [
+      { id: 1, order_id: 'o1', from_status: null, to_status: 'placed', note: 'order placed', created_at: new Date(Date.now() - 36e5).toISOString() },
+      { id: 2, order_id: 'o2', from_status: null, to_status: 'placed', note: 'order placed', created_at: new Date(Date.now() - 864e5).toISOString() },
+      { id: 3, order_id: 'o2', from_status: 'placed', to_status: 'confirmed', note: null, created_at: new Date(Date.now() - 80e6).toISOString() },
+      { id: 4, order_id: 'o2', from_status: 'confirmed', to_status: 'shipped', note: null, created_at: new Date(Date.now() - 7e6).toISOString() },
+    ],
   }
   let session = null
   const listeners = new Set()
@@ -28,6 +47,14 @@ export function createMock() {
   const denied = { data: null, error: { message: 'new row violates row-level security policy' } }
 
   const embed = (table, rows, select) => {
+    if (table === 'orders') {
+      return rows.map((o) => ({
+        ...o,
+        order_items: db.order_items.filter((i) => i.order_id === o.id).map((i) => ({ ...i })),
+        order_status_history: db.order_status_history.filter((h) => h.order_id === o.id).map((h) => ({ ...h })),
+        shipping_zones: { name_ar: db.shipping_zones.find((z) => z.id === o.zone_id)?.name_ar },
+      }))
+    }
     if (table !== 'products') return rows
     return rows.map((r) => ({
       ...r,
@@ -119,12 +146,36 @@ export function createMock() {
     return { data: id, error: null }
   }
 
+  // Same rules as public.admin_set_order_status (supabase/migrations/…_admin_orders.sql)
+  function adminSetOrderStatus({ p_order_id, p_status, p_expected_status, p_note }) {
+    if (!session?.admin) return { data: null, error: { message: 'not authorized' } }
+    const next = { placed: ['confirmed', 'cancelled'], confirmed: ['preparing', 'cancelled'], preparing: ['shipped', 'cancelled'], shipped: ['delivered', 'cancelled'], pending_payment: ['cancelled'] }
+    const o = db.orders.find((x) => x.id === p_order_id)
+    if (!o) return { data: { ok: false, error: 'not_found' }, error: null }
+    if (p_expected_status && o.status !== p_expected_status) return { data: { ok: false, error: 'status_changed', status: o.status }, error: null }
+    if (!(next[o.status] ?? []).includes(p_status)) return { data: { ok: false, error: 'invalid_transition', status: o.status }, error: null }
+    const from = o.status
+    if (p_status === 'cancelled' && !o.stock_released) {
+      for (const i of db.order_items.filter((x) => x.order_id === o.id)) {
+        const v = db.product_variants.find((x) => x.id === i.variant_id)
+        if (v) v.stock_qty += i.qty
+      }
+      o.stock_released = true
+      if (o.payment_status === 'pending') o.payment_status = 'failed'
+    }
+    if (p_status === 'delivered' && o.payment_method === 'cod') o.payment_status = 'paid'
+    o.status = p_status
+    db.order_status_history.push({ id: db.order_status_history.length + 1, order_id: o.id, from_status: from, to_status: p_status, note: p_note || (p_status === 'delivered' && o.payment_method === 'cod' ? 'cash collected' : null), created_at: now() })
+    return { data: { ok: true, status: p_status, payment_status: o.payment_status }, error: null }
+  }
+
   return {
     from,
     rpc: async (fn, args) => {
       await wait()
       if (fn === 'is_admin') return { data: !!session?.admin, error: null }
       if (fn === 'admin_save_product') return adminSaveProduct(args.payload)
+      if (fn === 'admin_set_order_status') return adminSetOrderStatus(args)
       return { data: null, error: { message: 'unknown rpc' } }
     },
     auth: {

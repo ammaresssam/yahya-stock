@@ -4,6 +4,8 @@ import { Wordmark } from '../components/Brand'
 import ProductsTab from './Products'
 import CategoriesTab from './Categories'
 import InventoryTab from './Inventory'
+import OrdersTab from './Orders'
+import ZonesTab from './Zones'
 import { Toast } from './ui'
 
 function useAdminPage() {
@@ -140,7 +142,7 @@ function Login() {
 }
 
 function Panel() {
-  const [tab, setTab] = useState('products')
+  const [tab, setTab] = useState('orders')
   const [products, setProducts] = useState(null)
   const [categories, setCategories] = useState(null)
   const [loadError, setLoadError] = useState(false)
@@ -178,9 +180,11 @@ function Panel() {
   if (!products || !categories) return <p className="py-20 text-center text-muted">جاري التحميل…</p>
 
   const tabs = [
+    ['orders', 'الطلبات'],
     ['products', `المنتجات (${products.length})`],
     ['inventory', 'المخزون'],
     ['categories', `الأقسام (${categories.length})`],
+    ['zones', 'التوصيل'],
   ]
 
   return (
@@ -192,6 +196,8 @@ function Panel() {
           </button>
         ))}
       </div>
+      {tab === 'orders' && <OrdersTab notify={notify} onStockChange={refresh} />}
+      {tab === 'zones' && <ZonesTab notify={notify} />}
       {tab === 'products' && <ProductsTab products={products} categories={categories} refresh={refresh} notify={notify} />}
       {tab === 'inventory' && <InventoryTab products={products} refresh={refresh} notify={notify} />}
       {tab === 'categories' && <CategoriesTab products={products} categories={categories} refresh={refresh} notify={notify} />}
