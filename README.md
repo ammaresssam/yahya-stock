@@ -27,16 +27,26 @@ npm run preview    # serve the built site locally
 Uses [Supabase](https://supabase.com): a database, a login and photo storage. The free tier is enough for a shop this size.
 
 1. **Create a project** at supabase.com → *New project*. Pick the region closest to Egypt (e.g. Frankfurt) and save the database password somewhere safe.
-2. **Create the tables:** *SQL Editor* → *New query* → paste the entire contents of `supabase/schema.sql` → **Run**. This creates the products and categories tables, the photo bucket, the security rules and the starting categories (رجالي / حريمي / أطفال).
+2. **Create the tables:** run every file in `supabase/migrations/` **in filename order**. Either:
+   - *SQL Editor* → *New query* → paste one file → **Run**, then the next one; or
+   - with the Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push`.
+
+   This creates the tables, the photo bucket, the security rules and the starting categories (رجالي / حريمي / أطفال).
 3. **Create the owner's login:** *Authentication → Users → Add user → Create new user*. Enter the owner's email and a strong password, and tick *Auto Confirm User*.
-4. **Close public sign-up (important):** *Authentication → Sign In / Providers* → switch **off** *Allow new users to sign up*. Otherwise anyone could register an account and edit your products.
-5. **Copy the two keys:** *Project Settings → API*. Copy the **Project URL** and the **anon / publishable** key. Copy `.env.example` to `.env.local` and paste them in:
+4. **Make that account the admin:** only accounts listed in `admin_users` can change products. In the SQL Editor run (with the owner's email):
+   ```sql
+   insert into public.admin_users (user_id, note)
+   select id, 'store owner' from auth.users where email = 'OWNER-EMAIL@example.com';
+   ```
+   To remove someone's access later: `delete from public.admin_users where user_id = '…';`
+5. **Close public sign-up (recommended):** *Authentication → Sign In / Providers* → switch **off** *Allow new users to sign up*. The database rules already stop non-admins from editing anything, but there's no reason to let strangers create accounts.
+6. **Copy the two keys:** *Project Settings → API*. Copy the **Project URL** and the **anon / publishable** key. Copy `.env.example` to `.env.local` and paste them in:
    ```
    VITE_SUPABASE_URL=https://xxxx.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJ...
    ```
-   The anon key is public by design; the security rules in `schema.sql` are what protect your data. **Never** use the `service_role` key anywhere in this project.
-6. Restart `npm run dev` and open **`http://localhost:5173/#/admin`**. Log in with the account from step 3.
+   The anon key is public by design; the security rules in `supabase/migrations/` are what protect your data. **Never** use the `service_role` key anywhere in this project.
+7. Restart `npm run dev` and open **`http://localhost:5173/#/admin`**. Log in with the account from step 3. A logged-in account that isn't in `admin_users` sees "الحساب ده مش مسموح له".
 
 When deploying (below), add the same two variables in your host's *Environment variables* settings.
 
@@ -66,7 +76,8 @@ Environment variables are baked in at build time, so re-deploy after changing th
 
 ## Before going live: checklist
 
-- [ ] Supabase project created, `schema.sql` run, owner user created, **public sign-up turned off**
+- [ ] Supabase project created, all migrations run, owner user created **and added to `admin_users`**, public sign-up turned off
+- [ ] The manual security checks in `tests/README.md` done on the real project
 - [ ] Owner confirms the address, phone numbers, WhatsApp number and opening hours (`site.js`)
 - [ ] Facebook / Instagram / TikTok links added (the Facebook QR on the sign has no readable URL)
 - [ ] Real products and photos added through the admin panel
@@ -76,7 +87,8 @@ Environment variables are baked in at build time, so re-deploy after changing th
 ## Project structure
 
 ```
-supabase/schema.sql        database tables, security rules, photo bucket
+supabase/migrations/       database tables and security rules, one numbered file per change
+tests/                     automated database security tests (`npm test`)
 src/data/site.js           shop details (address, phones, hours, social)
 src/data/products.js       demo products (used only when no database is connected)
 src/lib/store.jsx          loads products/categories (database or demo file)
@@ -86,7 +98,7 @@ src/admin/                 admin panel (loaded as its own chunk; customers never
 src/dev/mockSupabase.js    dev-only fake database: try the panel offline at /#/admin?mock
 ```
 
-To try the admin panel without a database while developing: `npm run dev`, open `/#/admin?mock`, log in with `owner@test.com` / `123456`. Changes live only in memory. This mock is not included in production builds.
+To try the admin panel without a database while developing: `npm run dev`, open `/#/admin?mock`, log in with `owner@test.com` / `123456` (admin) or `customer@test.com` / `123456` (a non-admin, which is refused). Changes live only in memory. This mock is not included in production builds.
 
 ## Limits to know about
 

@@ -39,7 +39,29 @@ export default function Admin() {
   if (!supabase) return <Shell><SetupNotice /></Shell>
   if (session === undefined) return <Shell><p className="py-20 text-center text-muted">جاري التحميل…</p></Shell>
   if (!session) return <Shell><Login /></Shell>
-  return <Shell onLogout={() => supabase.auth.signOut()}><Panel /></Shell>
+  return <Shell onLogout={() => supabase.auth.signOut()}><AdminGate key={session.user?.id} /></Shell>
+}
+
+// The database enforces admin rights on every write (see migrations); this check only
+// keeps a logged-in non-admin from seeing a panel where every save would fail.
+function AdminGate() {
+  const [allowed, setAllowed] = useState(null)
+
+  useEffect(() => {
+    supabase.rpc('is_admin').then(({ data, error }) => setAllowed(!error && data === true))
+  }, [])
+
+  if (allowed === null) return <p className="py-20 text-center text-muted">جاري التحقق من الصلاحيات…</p>
+  if (!allowed) {
+    return (
+      <div className="mx-auto max-w-md rounded-[28px] bg-white p-7 text-center ring-1 ring-line">
+        <h1 className="text-2xl font-black text-ink">الحساب ده مش مسموح له</h1>
+        <p className="mt-2 text-muted">لوحة التحكم لصاحب المحل بس. لو انت صاحب المحل، اتأكد إن حسابك متضاف كأدمن (شوف README).</p>
+        <button type="button" onClick={() => supabase.auth.signOut()} className="btn btn-ink mt-5 h-11 px-6">تسجيل الخروج</button>
+      </div>
+    )
+  }
+  return <Panel />
 }
 
 function Shell({ children, onLogout }) {
@@ -147,7 +169,7 @@ function Panel() {
     return (
       <div className="rounded-3xl bg-white p-10 text-center ring-1 ring-line">
         <p className="font-bold text-ink">تعذر تحميل البيانات</p>
-        <p className="mt-1 text-sm text-muted">اتأكد إنك شغلت ملف schema.sql في Supabase وإن النت شغال.</p>
+        <p className="mt-1 text-sm text-muted">اتأكد إنك شغلت ملفات supabase/migrations في Supabase وإن النت شغال.</p>
         <button type="button" onClick={refresh} className="btn btn-ink mt-4 h-11 px-6">إعادة المحاولة</button>
       </div>
     )

@@ -1,5 +1,6 @@
 // DEV ONLY — an in-memory stand-in for Supabase so the admin panel can be tried and tested offline.
-// Open  /#/admin?mock   (login: owner@test.com / 123456). Not included in production builds.
+// Open  /#/admin?mock   (admin: owner@test.com / 123456, non-admin: customer@test.com / 123456).
+// Not included in production builds.
 export function createMock() {
   const db = {
     categories: [
@@ -31,7 +32,7 @@ export function createMock() {
     const match = (row) => q.filters.every(([c, v]) => row[c] === v)
     function run() {
       const rows = db[table]
-      if (!session && q.op !== 'select') return { data: null, error: { message: 'not authenticated' } }
+      if (q.op !== 'select' && !session?.admin) return { data: null, error: { message: 'new row violates row-level security policy' } }
       if (q.op === 'select') {
         let out = rows.filter(match)
         if (q.order) out = [...out].sort((a, b) => (a[q.order[0]] > b[q.order[0]] ? 1 : -1) * (q.order[1] ? 1 : -1))
@@ -57,6 +58,7 @@ export function createMock() {
 
   return {
     from,
+    rpc: async (fn) => (fn === 'is_admin' ? wait({ data: !!session?.admin, error: null }) : { data: null, error: { message: 'unknown rpc' } }),
     auth: {
       getSession: async () => ({ data: { session } }),
       onAuthStateChange: (fn) => {
@@ -65,8 +67,8 @@ export function createMock() {
       },
       signInWithPassword: async ({ email, password }) => {
         await wait()
-        if (email === 'owner@test.com' && password === '123456') {
-          session = { user: { email } }
+        if ((email === 'owner@test.com' || email === 'customer@test.com') && password === '123456') {
+          session = { user: { id: email, email }, admin: email === 'owner@test.com' }
           emit()
           return { data: { session }, error: null }
         }
