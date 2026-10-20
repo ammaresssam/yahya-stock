@@ -36,19 +36,27 @@ export function DataProvider({ children }) {
     error: false,
     products: dbConfigured ? [] : demoProducts,
     categories: dbConfigured ? [] : localCategories,
+    zones: [],
   })
 
   const load = useCallback(async () => {
     if (!dbConfigured) return
     setState((s) => ({ ...s, loading: true, error: false }))
     try {
-      const [cats, prods] = await Promise.all([
+      const [cats, prods, zones] = await Promise.all([
         rest('categories?select=*&order=created_at.asc'),
         rest(PRODUCTS_QUERY),
+        rest('shipping_zones?select=id,name_ar,name_en,fee&active=eq.true&order=position.asc').catch(() => []),
       ])
-      setState({ loading: false, error: false, categories: cats.map(rowToCategory), products: prods.map(fromRow).filter((p) => p.variants.length) })
+      setState({
+        loading: false,
+        error: false,
+        categories: cats.map(rowToCategory),
+        products: prods.map(fromRow).filter((p) => p.variants.length),
+        zones: zones.map((z) => ({ id: z.id, name: { ar: z.name_ar, en: z.name_en || z.name_ar }, fee: z.fee })),
+      })
     } catch {
-      setState({ loading: false, error: true, categories: [], products: [] })
+      setState({ loading: false, error: true, categories: [], products: [], zones: [] })
     }
   }, [])
 

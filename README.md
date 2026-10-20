@@ -50,6 +50,36 @@ Uses [Supabase](https://supabase.com): a database, a login and photo storage. Th
 
 When deploying (below), add the same two variables in your host's *Environment variables* settings.
 
+### Turn on online checkout (cash on delivery)
+
+Checkout runs on Supabase's servers as an **Edge Function** (`supabase/functions/checkout`). It holds the server-only key; the browser never does.
+
+1. Install the [Supabase CLI](https://supabase.com/docs/guides/cli) and log in: `supabase login`, then `supabase link --project-ref <your-project-ref>`.
+2. Set the function's settings (these stay on Supabase's servers, never in the website code):
+   ```bash
+   supabase secrets set SITE_ORIGINS="http://localhost:5173" SITE_URL="http://localhost:5173" IP_HASH_SALT="<any long random text>"
+   ```
+   After the site has its real address, set both `SITE_ORIGINS` and `SITE_URL` to it (e.g. `https://yahyastock.com`). `SITE_ORIGINS` may list several addresses separated by commas.
+   `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided to the function by Supabase automatically; don't set or copy them anywhere.
+3. Deploy the function: `supabase functions deploy checkout`. The setting `verify_jwt = false` in `supabase/config.toml` lets customers check out without an account; the function checks everything itself.
+4. **Set the real delivery fees.** The fees in the database (Alexandria 50, Cairo 75, …) are **placeholders**. Change them in *Table Editor → shipping_zones* (an admin screen for this comes in Stage 3).
+
+The cart then shows *إتمام الطلب* (checkout). Customers fill in their name, mobile, governorate, area and address and choose cash on delivery. The order is saved, the stock is reserved, and they land on a private tracking page (`/#/order/…`). Ordering on WhatsApp stays available as a second option.
+
+How checkout stays safe:
+- **Prices:** the browser only sends *which size* and *how many*. Prices, delivery fee and total are read from the database inside `place_order()`. If the total the customer saw no longer matches (a price changed), nothing is saved and the customer is shown the new total to confirm.
+- **Stock:** sizes are locked while an order is placed, so the last piece can only be sold once.
+- **Privacy:** orders can't be read from the browser at all, except by the admin. A customer sees only their own order, through a secret 43-character link. Only its fingerprint (SHA-256) is stored, and the link page never shows the full address or phone.
+- **Abuse:** at most 5 orders per hour per device and per phone number.
+
+### Try the full shop locally, without Supabase
+
+`npm run dev:backend` starts a local stand-in for Supabase on port 54321. It runs the real database migrations (in-memory Postgres) and the real checkout logic, with the demo products loaded. Then in a second terminal:
+```bash
+VITE_SUPABASE_URL=http://localhost:54321 VITE_SUPABASE_ANON_KEY=local npm run dev
+```
+Everything resets when it stops. It's for trying and demoing only; never deploy it. The admin panel still uses `/#/admin?mock` locally.
+
 ### Using the admin panel
 
 Open `your-site.com/#/admin` (bookmark it on the owner's phone). The link is not shown anywhere on the public site.
@@ -84,6 +114,8 @@ Environment variables are baked in at build time, so re-deploy after changing th
 - [ ] Owner confirms the address, phone numbers, WhatsApp number and opening hours (`site.js`)
 - [ ] Facebook / Instagram / TikTok links added (the Facebook QR on the sign has no readable URL)
 - [ ] Real products and photos added through the admin panel
+- [ ] **Real delivery fees** set in `shipping_zones` (the current ones are placeholders)
+- [ ] Checkout function deployed, `SITE_ORIGINS` / `SITE_URL` set to the real site address, and one real test order placed and checked in the database
 - [ ] Owner confirms the claims in the rotating hero headlines ("براندات", "كل أسبوع", "أطفال") are true. Edit them in `src/lib/i18n.jsx` (`heroTitles`)
 - [ ] Add a 1200×630 PNG social-share image and an `og:image` tag
 
@@ -99,6 +131,9 @@ src/lib/store.jsx          loads products/categories (database or demo file)
 src/lib/i18n.jsx           all Arabic/English text, hero headlines
 src/components/            public site sections
 src/admin/                 admin panel (loaded as its own chunk; customers never download it)
+src/components/CheckoutPage.jsx, OrderPage.jsx   checkout and order tracking
+supabase/functions/        Edge Functions (server side): checkout; shared logic in _shared/
+scripts/local-backend.mjs  dev-only local stand-in for Supabase (npm run dev:backend)
 src/dev/mockSupabase.js    dev-only fake database: try the panel offline at /#/admin?mock
 ```
 
@@ -106,7 +141,7 @@ To try the admin panel without a database while developing: `npm run dev`, open 
 
 ## Limits to know about
 
-- Orders still go to WhatsApp and aren't stored yet; online checkout comes in the next stages. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
+- Order management in the admin panel (seeing orders, changing their status) comes in Stage 3, and card payments in Stage 4. Until then, read orders in Supabase → *Table Editor → orders*. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
 - The product list is loaded once per visit; customers see changes on their next page load.
 
 ## Tech

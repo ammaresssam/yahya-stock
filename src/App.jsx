@@ -11,9 +11,30 @@ import NewArrivals from './components/NewArrivals'
 import { Contact, Visit, WhyUs } from './components/InfoSections'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
+import CheckoutPage from './components/CheckoutPage'
+import OrderPage from './components/OrderPage'
 import { BagIcon, WhatsAppIcon } from './components/Icons'
 
-function useReveal() {
+// "#/checkout" and "#/order/<token>" are pages; any other hash (e.g. "#shop") is a section of the home page.
+function readRoute() {
+  const h = window.location.hash
+  if (h.startsWith('#/checkout')) return { name: 'checkout' }
+  const m = h.match(/^#\/order\/([A-Za-z0-9_-]{32,128})/)
+  if (m) return { name: 'order', token: m[1] }
+  return { name: 'home' }
+}
+
+function useRoute() {
+  const [route, setRoute] = useState(readRoute)
+  useEffect(() => {
+    const onChange = () => setRoute(readRoute())
+    window.addEventListener('hashchange', onChange)
+    return () => window.removeEventListener('hashchange', onChange)
+  }, [])
+  return route
+}
+
+function useReveal(key) {
   useEffect(() => {
     const els = document.querySelectorAll('[data-reveal]')
     if (!('IntersectionObserver' in window)) return els.forEach((el) => el.classList.add('is-visible'))
@@ -29,7 +50,7 @@ function useReveal() {
     )
     els.forEach((el) => io.observe(el))
     return () => io.disconnect()
-  }, [])
+  }, [key])
 }
 
 function FloatingActions() {
@@ -52,23 +73,43 @@ function FloatingActions() {
 
 function Page() {
   const [category, setCategory] = useState('all')
-  useReveal()
+  const route = useRoute()
+  useReveal(route.name)
+
+  // Pages start at the top; returning home from a page jumps to the requested section.
+  useEffect(() => {
+    if (route.name !== 'home') {
+      window.scrollTo(0, 0) // (newer browsers return a value here — never return it from an effect)
+      return
+    }
+    const id = window.location.hash.slice(1)
+    if (id && !id.startsWith('/')) requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView())
+  }, [route.name, route.token])
+
   return (
     <>
       <a href="#main" className="skip-link">Skip to content</a>
       <Header />
       <main id="main">
-        <Hero />
-        <Marquee />
-        <Categories onPick={setCategory} />
-        <Shop category={category} setCategory={setCategory} />
-        <NewArrivals />
-        <WhyUs />
-        <Visit />
-        <Contact />
+        {route.name === 'checkout' ? (
+          <CheckoutPage />
+        ) : route.name === 'order' ? (
+          <OrderPage key={route.token} token={route.token} />
+        ) : (
+          <>
+            <Hero />
+            <Marquee />
+            <Categories onPick={setCategory} />
+            <Shop category={category} setCategory={setCategory} />
+            <NewArrivals />
+            <WhyUs />
+            <Visit />
+            <Contact />
+          </>
+        )}
       </main>
       <Footer />
-      <FloatingActions />
+      {route.name !== 'checkout' && <FloatingActions />}
       <CartDrawer />
     </>
   )

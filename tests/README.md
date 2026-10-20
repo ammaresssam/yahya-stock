@@ -37,7 +37,8 @@ Run them in the Supabase SQL Editor, or with the anon key from a browser console
    select a.user_id, u.email from public.admin_users a join auth.users u on u.id = a.user_id;
    ```
 4. **A non-admin really is blocked.** Create a throwaway user, log in to `/#/admin` with it, and confirm you see "الحساب ده مش مسموح له". Then, using that user's session in the browser console, try `supabase.from('product_variants').update({ price: 1 }).eq('id', '<some size id>')` and `supabase.rpc('admin_save_product', { payload: {} })`. Confirm 0 rows changed and "not authorized". Delete the throwaway user afterwards.
-5. **The service_role key isn't in the frontend.** Search the built `dist/` folder for `service_role`: there must be no match. The only key in `.env.local` is the anon/publishable one.
+5. **Orders are private.** With only the anon key (browser console on the live site), `fetch(SUPABASE_URL + '/rest/v1/orders?select=*', { headers: { apikey: ANON_KEY } })` must return an empty list or a permission error, and calling `place_order` through `/rest/v1/rpc/place_order` must be refused.
+6. **The service_role key isn't in the frontend.** Search the built `dist/` folder for `service_role`: there must be no match. The only key in `.env.local` is the anon/publishable one.
 
 ## Test files
 
@@ -45,3 +46,8 @@ Run them in the Supabase SQL Editor, or with the anon key from a browser console
 |---|---|
 | `admin-authorization.test.js` | Stage 0. Only admins can change products, categories and photos. It includes a test showing the old rules were vulnerable. |
 | `variants-and-images.test.js` | Stage 1. Sizes with their own price and stock, and photos. Covers who can see and change them, the database rules (no negative stock or zero price, valid discount, no repeated size, at most 8 photos), moving existing data into the new layout, and the owner's all-or-nothing save. |
+| `orders.test.js` | Stage 2. Placing orders: prices come only from the database, browser-sent prices are ignored, a changed total aborts the order, overselling is blocked, hidden or switched-off sizes can't be bought, input is validated, and there's a rate limit. Privacy: visitors and customers can't call `place_order`, can't read, create or change orders, and can't change delivery fees. A tracking link shows only its own order, without the full address or phone. |
+| `checkout-core.test.js` | Stage 2. The checkout Edge Function's logic, run against the real database functions. Covers phone normalising (Arabic digits, +20), input validation, the secret-link format, which HTTP errors reach the customer, and that internal errors are never shown. |
+
+What these can't prove: two customers buying the last piece at the very same millisecond. PGlite has a single connection, so the row lock in `place_order` is tested only one order after another. On real Postgres that lock (`select … for update`) is what serialises them.
+

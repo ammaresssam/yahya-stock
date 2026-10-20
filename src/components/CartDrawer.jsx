@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
 import { waLink } from '../lib/links'
+import { checkoutAvailable } from '../lib/api'
 import GarmentArt from './GarmentArt'
 import { BagIcon, CloseIcon, MinusIcon, PlusIcon, TrashIcon, WhatsAppIcon } from './Icons'
 
@@ -144,9 +145,19 @@ export default function CartDrawer() {
                 <span className="text-2xl font-black text-ink">{price(cart.total)}</span>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-muted">{t('cartNote')}</p>
-              <a href={waLink(message())} target="_blank" rel="noopener noreferrer" className="btn mt-4 h-13 w-full bg-[#1fa855] text-lg text-white hover:bg-[#178f47]">
+              {checkoutAvailable && (
+                <a href="#/checkout" onClick={() => cart.setOpen(false)} className="btn btn-red mt-4 h-13 w-full text-lg">
+                  {t('checkout')}
+                </a>
+              )}
+              <a
+                href={waLink(message())}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`btn w-full ${checkoutAvailable ? 'mt-2 h-11 border border-[#1fa855] text-[#178f47] hover:bg-[#1fa855]/10' : 'mt-4 h-13 bg-[#1fa855] text-lg text-white hover:bg-[#178f47]'}`}
+              >
                 <WhatsAppIcon className="size-5" />
-                {t('sendOrder')}
+                {checkoutAvailable ? t('orWhatsapp') : t('sendOrder')}
               </a>
               <button type="button" onClick={cart.clear} className="mt-2 w-full py-2 text-sm font-bold text-muted hover:text-brand">
                 {t('clearCart')}
