@@ -17,6 +17,10 @@ export const site = {
   },
   area: { ar: 'ميامي – سيدي بشر، الإسكندرية', en: 'Miami – Sidi Bishr, Alexandria' },
 
+  // هل العنوان اتأكد من صاحب المحل؟ الخريطة والاتجاهات بتظهر بس لما تبقى true
+  // Has the owner confirmed the address? The map and directions only show when true.
+  addressConfirmed: false,
+
   // Text used for the Google Maps search / directions link
   mapsQuery: '94 Farouk Abd El Wahab Street, Miami, Alexandria, Egypt',
 

@@ -1,67 +1,47 @@
 import { useLang } from '../lib/i18n'
 import { useData } from '../lib/store'
+import { useCatalog } from '../lib/catalogState'
 import GarmentArt from './GarmentArt'
-import SectionHeading from './SectionHeading'
 import { ArrowIcon } from './Icons'
 
-export default function Categories({ onPick }) {
+// Category tiles: a swipeable row on phones, a grid on larger screens.
+export default function Categories() {
   const { t, pick, num } = useLang()
-  const { categories, products } = useData()
-  const newCount = products.filter((p) => p.isNew).length
-
-  const go = (id) => {
-    onPick(id)
-    document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const { categories, products, loading } = useData()
+  const { browse } = useCatalog()
+  if (!loading && !categories.length) return null
 
   return (
-    <section className="bg-paper py-16 sm:py-20" aria-labelledby="cat-title">
+    <section className="bg-white pt-8 sm:pt-10" aria-labelledby="cat-title">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading id="cat-title" kicker={t('catKicker')} title={t('catTitle')} />
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))]">
-          {categories.map((c, i) => {
-            const count = products.filter((p) => p.category === c.id).length
+        <h2 id="cat-title" className="mb-4 text-2xl font-black text-ink sm:text-3xl">{t('categoriesNav')}</h2>
+        <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0">
+          {(loading ? [1, 2, 3] : categories).map((c, i) => {
+            if (loading) return <li key={i} className="aspect-[4/3] w-[62%] shrink-0 animate-pulse rounded-[24px] bg-paper sm:w-auto" />
+            const inCat = products.filter((p) => p.category === c.id)
+            const photo = inCat.find((p) => p.image)?.image
             return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => go(c.id)}
-                className="cat-card reveal group relative flex overflow-hidden rounded-[28px] bg-white text-start ring-1 ring-line"
-                data-reveal
-                style={{ '--d': `${i * 80}ms` }}
-              >
-                <GarmentArt {...c.art} className="cat-art aspect-square w-[46%] shrink-0 p-4" />
-                <span className="flex flex-1 flex-col justify-between p-5 sm:p-6">
-                  <span>
-                    <span className="block text-3xl font-black text-ink sm:text-4xl">{pick(c.name)}</span>
-                    <span className="mt-1 block text-muted">{t('itemsCount')(num(count))}</span>
+              <li key={c.id} className="w-[62%] shrink-0 snap-start sm:w-auto">
+                <button type="button" onClick={() => browse({ category: c.id })} className="cat-tile group relative block aspect-[4/3] w-full overflow-hidden rounded-[24px] text-start">
+                  {photo ? (
+                    <img src={photo} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  ) : (
+                    <GarmentArt {...c.art} className="cat-art absolute inset-0 p-6 pb-14" />
+                  )}
+                  <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-linear-to-t from-ink/85 via-ink/40 to-transparent p-4 pt-12 text-white">
+                    <span>
+                      <span className="block text-2xl font-black leading-tight sm:text-3xl">{pick(c.name)}</span>
+                      <span className="text-sm text-white/80">{t('itemsCount')(num(inCat.length))}</span>
+                    </span>
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-ink transition group-hover:bg-brand group-hover:text-white">
+                      <ArrowIcon className="size-5 rtl:-scale-x-100" />
+                    </span>
                   </span>
-                  <span className="inline-flex items-center gap-2 font-bold text-brand">
-                    {t('shopNow')}
-                    <ArrowIcon className="size-5 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
-                  </span>
-                </span>
-              </button>
+                </button>
+              </li>
             )
           })}
-          <a
-            href="#new"
-            className="cat-card reveal group relative flex min-h-48 flex-col justify-between overflow-hidden rounded-[28px] bg-ink p-6 text-white "
-            data-reveal
-            style={{ '--d': '160ms' }}
-          >
-            <span className="pointer-events-none absolute inset-0 dots opacity-10" aria-hidden="true" />
-            <span className="relative">
-              <span className="inline-block rounded-full bg-brand px-3 py-1 text-sm font-bold">{t('newBadge')}</span>
-              <span className="mt-4 block text-3xl font-black sm:text-4xl">{t('catNew')}</span>
-              <span className="mt-1 block text-white/65">{t('itemsCount')(num(newCount))}</span>
-            </span>
-            <span className="relative inline-flex items-center gap-2 font-bold">
-              {t('shopNow')}
-              <ArrowIcon className="size-5 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
-            </span>
-          </a>
-        </div>
+        </ul>
       </div>
     </section>
   )

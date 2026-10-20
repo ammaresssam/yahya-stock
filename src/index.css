@@ -29,6 +29,21 @@
   .btn-ink { @apply bg-ink text-white hover:bg-brand disabled:hover:bg-ink; }
 
   .badge { @apply rounded-full px-2.5 py-1 text-[11px] font-extrabold leading-none; }
+  /* sale badge: the one strong red element on a card */
+  .sale-badge { @apply rounded-lg bg-brand px-2 py-1 text-sm font-black leading-none text-white; box-shadow: 0 6px 14px -8px rgb(227 38 45 / .9); }
+
+  .pill { @apply inline-flex h-9 items-center rounded-full border border-line bg-white px-3.5 text-sm font-bold text-ink transition hover:border-ink; }
+  .pill[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
+
+  .toggle { @apply relative h-6 w-11 shrink-0 cursor-pointer appearance-none rounded-full bg-line transition; }
+  .toggle::after { content: ""; @apply absolute top-0.5 size-5 rounded-full bg-white shadow transition-all; inset-inline-start: 2px; }
+  .toggle:checked { @apply bg-brand; }
+  .toggle:checked::after { inset-inline-start: 22px; }
+
+  /* category bar: red underline marks the active one */
+  .cat-link::after { content: ""; position: absolute; inset-inline: .75rem; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--color-brand); transform: scaleX(0); transition: transform .2s ease; }
+  .cat-link:hover::after { transform: scaleX(.5); }
+  .cat-link[aria-current="true"]::after { transform: scaleX(1); }
 
   .size-chip {
     @apply min-w-9 rounded-xl border border-line bg-white px-2 py-1 text-[13px] font-bold sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
@@ -92,9 +107,7 @@
 img.product-media { transform-origin: center; }
 .product-card:hover img.product-media { transform: scale(1.04); }
 
-.cat-card { transition: transform .3s ease, box-shadow .3s ease; }
-.cat-card:hover { transform: translateY(-3px); box-shadow: 0 22px 40px -26px rgb(0 0 0 / .45); }
-.cat-card:hover .g-art { transform: rotate(4deg) scale(1.05); }
+.cat-tile:hover .g-art { transform: rotate(4deg) scale(1.05); }
 
 .why-card { transition: transform .3s ease; }
 .why-card:hover { transform: translateY(-3px); }
@@ -105,10 +118,10 @@ img.product-media { transform-origin: center; }
 @keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
 
 /* marquee runs toward the reading direction */
-.marquee { animation: marquee 40s linear infinite; }
-[dir="rtl"] .marquee { animation-name: marquee-rtl; }
-@keyframes marquee { to { transform: translateX(-50%); } }
-@keyframes marquee-rtl { to { transform: translateX(50%); } }
+
+
+
+
 
 /* scroll reveal */
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease var(--d, 0ms), transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0ms); }

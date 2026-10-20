@@ -22,6 +22,21 @@ npm run build      # production build → dist/
 npm run preview    # serve the built site locally
 ```
 
+## What's in it
+
+| Section | Notes |
+|---|---|
+| Header | Dark, sticky. Logo, product search, language toggle, WhatsApp and cart. Below it a category bar (All, then each category from the database, *العروض* only when a real discount exists, New arrivals) with the active one underlined in red |
+| Hero | Compact, so products show quickly. The rotating headlines you chose (`heroTitles` in `src/lib/i18n.jsx`) and *تسوق الآن*. The "up to X% off" badge is **calculated from real before-discount prices** and hidden when there are none. It shows a real product photo once the shop has one, otherwise the brand illustration |
+| Categories | Photo tiles (first product photo in each category); a swipeable row on phones |
+| Offers | Only products whose in-stock sizes have a real before-discount price; hidden if none |
+| Catalogue | Search (Arabic letter variants like ى/ي and أ/ا are matched), filters for category, size, price range, in stock and on sale, plus sorting (featured, newest, price up and down, biggest discount). Filters sit in a sidebar on desktop and a bottom sheet on phones. Active filters show as removable chips; there are loading, error and empty states |
+| Product card | Discount badge only for a real discount; sale price in red next to the struck-through original, regular price in black. Sold-out sizes crossed out, "N left" for low stock, add-to-cart, ask-on-WhatsApp, photo gallery |
+| New arrivals | Products marked *new* that are in stock (swipe on phones, arrows on desktop) |
+| Trust strip | Only facts that are true: cash on delivery and delivery to governorates appear **only when online checkout is connected**; WhatsApp and the physical store always |
+| Store and contact | Phones and WhatsApp (from the shop sign). The address shows "قيد التأكيد"; **the map and directions appear only after `addressConfirmed: true`** in `site.js`. Opening hours appear only once entered |
+| Cart, checkout, tracking | Unchanged behaviour: per-size prices, stock caps, cash on delivery, private tracking link, WhatsApp as a second option |
+
 ## Connect the database and admin panel (about 15 minutes, free)
 
 Uses [Supabase](https://supabase.com): a database, a login and photo storage. The free tier is enough for a shop this size.
@@ -111,7 +126,7 @@ Environment variables are baked in at build time, so re-deploy after changing th
 
 - [ ] Supabase project created, all migrations run, owner user created **and added to `admin_users`**, public sign-up turned off
 - [ ] The manual security checks in `tests/README.md` done on the real project
-- [ ] Owner confirms the address, phone numbers, WhatsApp number and opening hours (`site.js`)
+- [ ] Owner confirms the address (then set `addressConfirmed: true` to show the map and directions), phone numbers, WhatsApp number and opening hours (`site.js`)
 - [ ] Facebook / Instagram / TikTok links added (the Facebook QR on the sign has no readable URL)
 - [ ] Real products and photos added through the admin panel
 - [ ] **Real delivery fees** set in `shipping_zones` (the current ones are placeholders)
@@ -127,6 +142,7 @@ tests/                     automated database security tests (`npm test`)
 src/data/site.js           shop details (address, phones, hours, social)
 src/data/products.js       demo products (used only when no database is connected)
 src/lib/product.js         turns database rows / demo entries into one product shape (sizes, prices, stock, photos)
+src/lib/catalog.js         search, filters and sorting (pure functions, tested)
 src/lib/store.jsx          loads products/categories (database or demo file)
 src/lib/i18n.jsx           all Arabic/English text, hero headlines
 src/components/            public site sections

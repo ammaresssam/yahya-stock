@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLang } from '../lib/i18n'
+import { useData } from '../lib/store'
+import { useCatalog } from '../lib/catalogState'
+import { maxDiscount } from '../lib/catalog'
 import { BrandMark } from './Brand'
 import GarmentArt from './GarmentArt'
 import { ArrowIcon, PinIcon } from './Icons'
@@ -17,8 +20,7 @@ function RotatingTitle() {
 
   const [a, b] = titles[i % titles.length]
   return (
-    <h1 className="mt-5 min-h-[8.4rem] text-[2.6rem] font-black leading-[1.15] tracking-tight sm:min-h-[10.5rem] sm:text-6xl lg:min-h-[12.5rem] lg:text-[4.4rem]">
-      {/* key restarts the fade each time the title changes */}
+    <h1 className="mt-4 min-h-[6.2rem] text-[2.35rem] font-black leading-[1.12] tracking-tight sm:min-h-[8rem] sm:text-5xl lg:min-h-[9.4rem] lg:text-[3.6rem]">
       <span key={i % titles.length} className="title-swap block" aria-live="off">
         <span className="block">{a}</span>
         <span className="block text-brand">{b}</span>
@@ -28,59 +30,64 @@ function RotatingTitle() {
 }
 
 export default function Hero() {
-  const { t } = useLang()
+  const { t, num, pick } = useLang()
+  const { products } = useData()
+  const { browse } = useCatalog()
+
+  // Only claim a discount the catalogue really has.
+  const topDiscount = useMemo(() => products.filter((p) => p.totalStock > 0).reduce((m, p) => Math.max(m, maxDiscount(p)), 0), [products])
+  // A real product photo if the shop has one; otherwise the brand illustration.
+  const photo = useMemo(() => products.find((p) => p.featured && p.image) ?? products.find((p) => p.image), [products])
+
   return (
     <section id="home" className="relative overflow-hidden bg-ink text-white">
-      {/* perforated-banner texture like the shop sign */}
-      <div className="pointer-events-none absolute inset-0 dots opacity-[.07]" aria-hidden="true" />
-
-      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-10 sm:px-6 sm:pt-14 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:px-8 lg:pb-24 lg:pt-20">
+      <div className="pointer-events-none absolute inset-0 dots opacity-[.06]" aria-hidden="true" />
+      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:px-8 lg:py-12">
         <div className="rise">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-sm font-semibold text-white/85">
+          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white/85">
             <PinIcon className="size-4 text-brand" />
             {t('heroKicker')}
           </p>
           <RotatingTitle />
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75 sm:text-xl">{t('heroText')}</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#shop" className="btn btn-red group h-14 px-7 text-lg">
-              {t('heroCta')}
+          <p className="mt-3 max-w-lg text-base leading-relaxed text-white/70 sm:text-lg">{t('heroText')}</p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button type="button" onClick={() => browse({})} className="btn btn-red group h-13 px-8 text-lg">
+              {t('shopNowCta')}
               <ArrowIcon className="size-5 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
-            </a>
-            <a href="#visit" className="btn h-14 border border-white/25 px-7 text-lg text-white hover:border-white hover:bg-white hover:text-ink">
-              {t('heroCta2')}
-            </a>
+            </button>
+            {topDiscount > 0 && (
+              <button type="button" onClick={() => browse({ onSale: true, sort: 'discount' })} className="btn h-13 border border-white/25 px-6 text-white hover:border-white hover:bg-white hover:text-ink">
+                {t('seeOffers')}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* collage */}
-        <div className="rise grid grid-cols-2 gap-3 sm:gap-4" style={{ '--d': '120ms' }} aria-hidden="true">
-          <GarmentArt type="shirt" color="#ffffff" bg="#e3262d" className="hero-tile row-span-2 rounded-[28px] px-3 py-10 sm:px-5" />
-          <GarmentArt type="hoodie" color="#2b2a2f" bg="#f3f1ec" className="hero-tile aspect-square rounded-[28px] p-3 sm:p-4" />
-          <div className="hero-tile relative grid aspect-square place-items-center overflow-hidden rounded-[28px] bg-white">
-            <BrandMark className="size-[62%]" />
-            <span className="absolute bottom-3 font-logo text-sm font-extrabold italic tracking-[.25em] text-ink sm:bottom-4 sm:text-base">stock</span>
-          </div>
+        <div className="rise relative hidden lg:block" style={{ '--d': '120ms' }}>
+          {photo ? (
+            <img src={photo.image} alt={pick(photo.name)} width="640" height="560" fetchPriority="high" className="aspect-[8/7] w-full rounded-[28px] object-cover" />
+          ) : (
+            <div className="grid aspect-[8/7] grid-cols-[1.2fr_1fr] gap-3" aria-hidden="true">
+              <GarmentArt type="shirt" color="#ffffff" bg="#e3262d" className="hero-tile row-span-2 rounded-[28px] px-3 py-8" />
+              <GarmentArt type="hoodie" color="#2b2a2f" bg="#f3f1ec" className="hero-tile rounded-[28px] p-3" />
+              <div className="hero-tile relative grid place-items-center overflow-hidden rounded-[28px] bg-white">
+                <BrandMark className="size-[58%]" />
+              </div>
+            </div>
+          )}
+          {topDiscount > 0 && (
+            <div className="absolute -top-3 start-6 rotate-[-6deg] rounded-2xl bg-brand px-5 py-3 text-center shadow-[0_14px_30px_-12px_rgba(227,38,45,.8)]">
+              <span className="block text-xs font-bold">{t('upTo')}</span>
+              <span className="block text-3xl font-black leading-none">{t('pct')(num(topDiscount))}</span>
+              <span className="block text-xs font-bold">{t('offWord')}</span>
+            </div>
+          )}
         </div>
+
+        {topDiscount > 0 && (
+          <p className="-mt-3 inline-flex w-fit items-center gap-2 rounded-full bg-brand px-4 py-1.5 text-sm font-black lg:hidden">{t('heroUpTo')(num(topDiscount))}</p>
+        )}
       </div>
     </section>
-  )
-}
-
-export function Marquee() {
-  const { t } = useLang()
-  const words = t('marquee')
-  const row = [...words, ...words]
-  return (
-    <div className="overflow-hidden border-y-4 border-ink bg-brand py-3.5 text-white" aria-hidden="true">
-      <div className="marquee flex w-max gap-8 whitespace-nowrap text-lg font-extrabold sm:text-xl">
-        {[...row, ...row].map((w, i) => (
-          <span key={i} className="flex items-center gap-8">
-            {w}
-            <span className="inline-block size-2 rounded-full bg-white/70" />
-          </span>
-        ))}
-      </div>
-    </div>
   )
 }

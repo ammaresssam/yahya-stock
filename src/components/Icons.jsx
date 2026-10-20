@@ -38,3 +38,8 @@ export const ChatIcon = stroke(<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8
 export const StoreIcon = stroke(<><path d="M4 10v10h16V10" /><path d="M3 10 5 4h14l2 6a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0Z" /><path d="M10 20v-5h4v5" /></>)
 export const GlobeIcon = stroke(<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z" /></>)
 export const CameraIcon = stroke(<><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></>)
+export const SearchIcon = stroke(<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>)
+export const FilterIcon = stroke(<path d="M4 6h16M7 12h10M10 18h4" />)
+export const TruckIcon = stroke(<><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></>)
+export const CashIcon = stroke(<><rect x="3" y="6" width="18" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 9v.01M18 15v.01" /></>)
+export const ChevronIcon = stroke(<path d="m9 6 6 6-6 6" />)

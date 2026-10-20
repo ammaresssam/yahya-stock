@@ -47,9 +47,13 @@ export default function Footer() {
             <br />
             {pick(site.area)}
           </address>
-          <a href={mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block font-bold text-brand hover:underline">
-            {t('directions')}
-          </a>
+          {site.addressConfirmed ? (
+            <a href={mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block font-bold text-brand hover:underline">
+              {t('directions')}
+            </a>
+          ) : (
+            <p className="mt-2 text-xs text-amber-300">{t('addressPending')}</p>
+          )}
         </div>
 
         <div>

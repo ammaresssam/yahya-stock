@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react'
 import { LangProvider, useLang } from './lib/i18n'
-import { CartProvider, useCart } from './lib/cart'
+import { CartProvider } from './lib/cart'
 import { DataProvider } from './lib/store'
+import { CatalogProvider } from './lib/catalogState'
 import { waLink } from './lib/links'
 import Header from './components/Header'
-import Hero, { Marquee } from './components/Hero'
+import Hero from './components/Hero'
 import Categories from './components/Categories'
 import Shop from './components/Shop'
-import NewArrivals from './components/NewArrivals'
-import { Contact, Visit, WhyUs } from './components/InfoSections'
+import NewArrivals, { Offers } from './components/NewArrivals'
+import { StoreContact, TrustStrip } from './components/InfoSections'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
 import CheckoutPage from './components/CheckoutPage'
 import OrderPage from './components/OrderPage'
-import { BagIcon, WhatsAppIcon } from './components/Icons'
+import { WhatsAppIcon } from './components/Icons'
 
 // "#/checkout" and "#/order/<token>" are pages; any other hash (e.g. "#shop") is a section of the home page.
 function readRoute() {
@@ -53,26 +54,17 @@ function useReveal(key) {
   }, [key])
 }
 
-function FloatingActions() {
+// A small WhatsApp button that stays out of the way (the cart lives in the sticky header).
+function FloatingWhatsApp() {
   const { t } = useLang()
-  const cart = useCart()
   return (
-    <div className="fixed bottom-4 end-4 z-30 flex flex-col items-center gap-3">
-      {cart.count > 0 && (
-        <button type="button" onClick={() => cart.setOpen(true)} aria-label={`${t('cart')} (${cart.count})`} className="fab bg-ink text-white">
-          <BagIcon className="size-6" />
-          <span className="absolute -top-1 -end-1 grid min-w-6 place-items-center rounded-full bg-brand px-1 text-xs font-bold leading-6 ring-2 ring-white">{cart.count}</span>
-        </button>
-      )}
-      <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label={t('orderWhatsapp')} className="fab bg-[#1fa855] text-white">
-        <WhatsAppIcon className="size-7" />
-      </a>
-    </div>
+    <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label={t('orderWhatsapp')} className="fab fixed bottom-4 end-4 z-30 size-12 bg-[#1fa855] text-white">
+      <WhatsAppIcon className="size-6" />
+    </a>
   )
 }
 
 function Page() {
-  const [category, setCategory] = useState('all')
   const route = useRoute()
   useReveal(route.name)
 
@@ -98,18 +90,17 @@ function Page() {
         ) : (
           <>
             <Hero />
-            <Marquee />
-            <Categories onPick={setCategory} />
-            <Shop category={category} setCategory={setCategory} />
+            <Categories />
+            <Offers />
+            <Shop />
             <NewArrivals />
-            <WhyUs />
-            <Visit />
-            <Contact />
+            <TrustStrip />
+            <StoreContact />
           </>
         )}
       </main>
       <Footer />
-      {route.name !== 'checkout' && <FloatingActions />}
+      {route.name !== 'checkout' && <FloatingWhatsApp />}
       <CartDrawer />
     </>
   )
@@ -120,7 +111,9 @@ export default function App() {
     <LangProvider>
       <DataProvider>
         <CartProvider>
-          <Page />
+          <CatalogProvider>
+            <Page />
+          </CatalogProvider>
         </CartProvider>
       </DataProvider>
     </LangProvider>
