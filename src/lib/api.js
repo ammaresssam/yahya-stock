@@ -22,6 +22,20 @@ export async function submitCheckout(body) {
   }
 }
 
+/**
+ * Only ever send the customer to Paymob's own payment pages (https, *.paymob.com).
+ * In local development the fake Paymob on localhost is allowed too.
+ */
+export function isSafePaymentUrl(url) {
+  try {
+    const u = new URL(url)
+    if (u.protocol === 'https:' && (u.hostname === 'paymob.com' || u.hostname.endsWith('.paymob.com'))) return true
+    return import.meta.env.DEV && u.protocol === 'http:' && u.hostname === 'localhost'
+  } catch {
+    return false
+  }
+}
+
 /** "Pay now" for an unpaid card order. Returns { ok, payment_url } or { ok: false, error }. */
 export async function retryPayment(token) {
   return submitCheckout({ action: 'retry_payment', tracking_token: token })

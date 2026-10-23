@@ -6,6 +6,7 @@ import { Wordmark } from './Brand'
 import { navItems } from './Header'
 import { socialList } from './InfoSections'
 import { WhatsAppIcon } from './Icons'
+import { POLICY_KEYS, policies } from '../data/policies'
 
 export default function Footer() {
   const { t, pick } = useLang()
@@ -72,6 +73,9 @@ export default function Footer() {
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 pb-24 pt-5 text-sm text-white/50 sm:px-6 sm:pb-5 lg:px-8">
           <p>© {year} {pick(site.name)} — {t('rights')}</p>
+          <nav aria-label={t('policies')} className="flex flex-wrap gap-x-4 gap-y-1">
+            {POLICY_KEYS.map((k) => <a key={k} href={`#/policy/${k}`} className="hover:text-white">{pick(policies[k].title)}</a>)}
+          </nav>
           {!live && <p>{t('demoNote')}</p>}
         </div>
       </div>

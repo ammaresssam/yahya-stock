@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
 import { useData } from '../lib/store'
-import { cardPaymentsEnabled, checkoutAvailable, rememberOrder, submitCheckout } from '../lib/api'
+import { cardPaymentsEnabled, checkoutAvailable, isSafePaymentUrl, rememberOrder, submitCheckout } from '../lib/api'
 import { waLink } from '../lib/links'
 import GarmentArt from './GarmentArt'
 import { WhatsAppIcon } from './Icons'
@@ -73,8 +73,8 @@ export default function CheckoutPage() {
     if (res.ok) {
       rememberOrder({ number: res.order_number, token: res.tracking_token, at: Date.now(), lang })
       cart.clear()
-      if (res.payment_url) {
-        window.location.assign(res.payment_url) // Stage 4: Paymob's hosted payment page
+      if (res.payment_url && isSafePaymentUrl(res.payment_url)) {
+        window.location.assign(res.payment_url) // Paymob's hosted payment page
         return
       }
       window.location.hash = `#/order/${res.tracking_token}`
@@ -198,7 +198,9 @@ export default function CheckoutPage() {
           <button type="submit" disabled={busy || !checkoutAvailable} className="btn btn-red mt-4 h-13 w-full text-lg">
             {busy ? t('placing') : confirmedTotal !== null ? t('confirmNewTotal') : t('placeOrder')}
           </button>
-          <p className="mt-3 text-center text-xs text-muted">{t('privacyNote')}</p>
+          <p className="mt-3 text-center text-xs text-muted">
+            {t('agreeNote')} <a href="#/policy/terms" className="font-bold underline">{pick({ ar: 'الشروط', en: 'terms' })}</a> {t('and')} <a href="#/policy/returns" className="font-bold underline">{pick({ ar: 'سياسة الاستبدال', en: 'returns policy' })}</a>. {t('privacyNote')} <a href="#/policy/privacy" className="underline">{pick({ ar: 'الخصوصية', en: 'Privacy' })}</a>
+          </p>
           <a href={waLink()} target="_blank" rel="noopener noreferrer" className="mt-2 block text-center text-sm font-bold text-[#1fa855] hover:underline">{t('orWhatsapp')}</a>
         </aside>
       </form>

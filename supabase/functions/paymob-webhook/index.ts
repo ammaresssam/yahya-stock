@@ -5,7 +5,7 @@
 //   2. apply_payment_event() matches the order, checks amount + currency, ignores repeats,
 //      and only then marks the order paid.
 // The customer's browser redirect is never used for payment status.
-import { createClient } from 'npm:@supabase/supabase-js@2.49.4'
+import { createClient } from 'npm:@supabase/supabase-js@2.117.3'
 import { handleWebhook, paymobConfig } from '../_shared/paymob-core.js'
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {

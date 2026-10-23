@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLang } from '../lib/i18n'
-import { fetchOrder, retryPayment } from '../lib/api'
+import { fetchOrder, isSafePaymentUrl, retryPayment } from '../lib/api'
 import { waLink } from '../lib/links'
 import { WhatsAppIcon } from './Icons'
 
@@ -19,7 +19,7 @@ export default function OrderPage({ token }) {
     setPaying(true)
     setPayError(false)
     const res = await retryPayment(token)
-    if (res.ok && res.payment_url) return window.location.assign(res.payment_url)
+    if (res.ok && isSafePaymentUrl(res.payment_url)) return window.location.assign(res.payment_url)
     setPaying(false)
     if (res.error === 'not_payable') load()
     else setPayError(true)

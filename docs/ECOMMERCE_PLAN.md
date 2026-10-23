@@ -1,6 +1,6 @@
 # Yahya Stock: E-commerce Upgrade Plan (Option C)
 
-Status: **awaiting approval**. No code has been changed yet.
+Status: **stages 0–5 implemented and tested locally** (see README and docs/LAUNCH_GUIDE.md). Real Supabase and Paymob sandbox checks are still to do.
 
 ---
 

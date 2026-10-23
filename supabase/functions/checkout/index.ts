@@ -3,7 +3,7 @@
 // the server and never reach the browser.
 //   body { items, customer, payment_method, expected_total }   → place an order
 //   body { action: 'retry_payment', tracking_token }            → "pay now" for an unpaid card order
-import { createClient } from 'npm:@supabase/supabase-js@2.49.4'
+import { createClient } from 'npm:@supabase/supabase-js@2.117.3'
 import { handleCheckout, handleRetryPayment } from '../_shared/checkout-core.js'
 import { paymobConfig, startPayment } from '../_shared/paymob-core.js'
 

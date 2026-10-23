@@ -12,6 +12,7 @@ import NewArrivals, { Offers, StorePicks } from './components/NewArrivals'
 import ProductPage from './components/ProductPage'
 import OrdersPage from './components/OrdersPage'
 import MobileNav from './components/MobileNav'
+import PolicyPage from './components/PolicyPage'
 import { StoreContact, TrustStrip } from './components/InfoSections'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
@@ -28,6 +29,8 @@ function readRoute() {
   const pm = h.match(/^#\/product\/([A-Za-z0-9_-]{1,64})/)
   if (pm) return { name: 'product', id: pm[1] }
   if (h.startsWith('#/orders')) return { name: 'orders' }
+  const pol = h.match(/^#\/policy\/(returns|delivery|privacy|terms)/)
+  if (pol) return { name: 'policy', id: pol[1] }
   return { name: 'home' }
 }
 
@@ -97,6 +100,8 @@ function Page() {
           <ProductPage key={route.id} id={route.id} />
         ) : route.name === 'orders' ? (
           <OrdersPage />
+        ) : route.name === 'policy' ? (
+          <PolicyPage which={route.id} />
         ) : (
           <>
             <Hero />

@@ -11,6 +11,8 @@ It has two modes:
 
 > ⚠️ The address, phone numbers and links come from the shop sign and public listings. The owner must confirm them in `src/data/site.js`.
 
+> **Launching?** Follow [docs/LAUNCH_GUIDE.md](docs/LAUNCH_GUIDE.md): the step-by-step checklist from content to live payments.
+
 ## Preview it locally
 
 ```bash
@@ -206,6 +208,8 @@ Environment variables are baked in at build time, so re-deploy after changing th
 - [ ] **Live payments only with the owner's explicit approval:** live keys plus `PAYMOB_MODE=live`, then one small real payment refunded from the Paymob dashboard
 - [ ] Owner confirms the claims in the rotating hero headlines ("براندات", "كل أسبوع", "أطفال") are true. Edit them in `src/lib/i18n.jsx` (`heroTitles`)
 - [ ] Add a 1200×630 PNG social-share image and an `og:image` tag
+- [ ] Policy pages filled in by the owner (`src/data/policies.js`, then `policiesApproved = true`)
+- [ ] Security headers active on the host (`public/_headers` or `vercel.json`); check with securityheaders.com
 
 ## Project structure
 
