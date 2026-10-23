@@ -4,6 +4,16 @@ import { PhoneIcon, WhatsAppIcon } from '../components/Icons'
 import { ACTION_LABEL, Modal, NEXT_STATUS, ORDER_STATUS, PAY_METHOD, PAY_STATUS, StatusPill } from './ui'
 
 const OPEN = ['placed', 'confirmed', 'preparing', 'shipped']
+const PAYMENT_OUTCOME = {
+  paid: 'تم الدفع ✓',
+  failed_attempt: 'محاولة دفع مرفوضة',
+  pending: 'الدفع قيد المراجعة',
+  refunded: 'تم استرداد المبلغ',
+  voided: 'تم إلغاء العملية',
+  amount_mismatch: '⚠️ مبلغ مختلف عن الطلب',
+  paid_after_cancel: '⚠️ دفع بعد إلغاء الطلب — محتاج استرداد',
+  ignored: 'دفع مكرر (اتجاهل)',
+}
 const FILTERS = [
   ['open', 'الطلبات المفتوحة'],
   ['placed', 'جديد'],
@@ -15,7 +25,7 @@ const FILTERS = [
   ['pending_payment', 'في انتظار الدفع'],
   ['all', 'الكل'],
 ]
-const SELECT = '*, order_items(*), order_status_history(*), shipping_zones(name_ar)'
+const SELECT = '*, order_items(*), order_status_history(*), shipping_zones(name_ar), payment_events(*)'
 
 const money = (n) => `${Number(n).toLocaleString('ar-EG')} ج.م`
 const when = (iso) => new Date(iso).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })
@@ -183,8 +193,11 @@ function OrderDetail({ order: o, onClose, onChanged, notify }) {
           <span className="badge bg-paper text-ink">{PAY_METHOD[o.payment_method]} · {PAY_STATUS[o.payment_status]}</span>
         </div>
 
-        {o.payment_method === 'card' && o.payment_status === 'paid' && o.status === 'cancelled' && (
-          <p className="rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-900">الطلب ده مدفوع بالبطاقة واتلغى — لازم ترجّع الفلوس للعميل من لوحة شركة الدفع.</p>
+        {o.payment_method === 'card' && o.payment_status === 'paid' && ['cancelled', 'payment_failed'].includes(o.status) && (
+          <p role="alert" className="rounded-2xl bg-brand/10 p-3 text-sm font-bold text-brand">الطلب ده مدفوع بالبطاقة لكنه ملغي — لازم ترجّع الفلوس للعميل من لوحة Paymob (أو تتواصل معاه لو المنتج لسه متاح).</p>
+        )}
+        {(o.payment_events ?? []).some((e) => e.outcome === 'amount_mismatch') && (
+          <p role="alert" className="rounded-2xl bg-brand/10 p-3 text-sm font-bold text-brand">وصل دفع بمبلغ مختلف عن إجمالي الطلب — الطلب ماتعلمش كمدفوع. راجعه في لوحة Paymob.</p>
         )}
 
         {/* customer */}
@@ -241,6 +254,21 @@ function OrderDetail({ order: o, onClose, onChanged, notify }) {
           </section>
         ) : (
           <p className="rounded-2xl bg-paper p-3 text-sm text-muted">الطلب ده خلص — مفيش خطوات تانية.</p>
+        )}
+
+        {/* card payment notifications received from Paymob (signature verified) */}
+        {o.payment_method === 'card' && (o.payment_events ?? []).length > 0 && (
+          <section>
+            <p className="field-label">إشعارات الدفع من Paymob</p>
+            <ul className="grid gap-1.5 text-sm">
+              {[...o.payment_events].sort((a, b) => (a.created_at < b.created_at ? -1 : 1)).map((e) => (
+                <li key={e.id} className="flex flex-wrap justify-between gap-2 rounded-xl bg-paper px-3 py-2">
+                  <span className="font-bold text-ink">{PAYMENT_OUTCOME[e.outcome] ?? e.outcome}</span>
+                  <span className="text-muted" dir="ltr">#{e.transaction_id} · {(e.amount_cents / 100).toLocaleString('ar-EG')} {e.currency}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {/* history */}

@@ -27,7 +27,12 @@ export function createMock() {
     ],
     orders: [
       { id: 'o1', order_number: 10001, customer_name: 'أحمد علي', phone: '01012345678', email: null, zone_id: 'alexandria', area: 'ميامي', address: '12 شارع خالد بن الوليد، الدور الثالث', notes: 'اتصل قبل ما تيجي', payment_method: 'cod', status: 'placed', payment_status: 'unpaid', subtotal: 600, shipping_fee: 50, total: 650, stock_released: false, created_at: new Date(Date.now() - 36e5).toISOString() },
+      { id: 'o3', order_number: 10003, customer_name: 'كريم فؤاد', phone: '01222333444', email: 'karim@example.com', zone_id: 'alexandria', area: 'سيدي بشر', address: 'شارع جمال عبد الناصر 40', notes: null, payment_method: 'card', status: 'payment_failed', payment_status: 'paid', subtotal: 255, shipping_fee: 50, total: 305, stock_released: true, created_at: new Date(Date.now() - 60e5).toISOString() },
       { id: 'o2', order_number: 10002, customer_name: 'منى حسن', phone: '01155555555', email: null, zone_id: 'cairo', area: 'مدينة نصر', address: 'شارع عباس العقاد، عمارة 5', notes: null, payment_method: 'cod', status: 'shipped', payment_status: 'unpaid', subtotal: 320, shipping_fee: 75, total: 395, stock_released: false, created_at: new Date(Date.now() - 864e5).toISOString() },
+    ],
+    payment_events: [
+      { id: 1, order_id: 'o3', transaction_id: '5501', amount_cents: 30500, currency: 'EGP', outcome: 'failed_attempt', created_at: new Date(Date.now() - 50e5).toISOString() },
+      { id: 2, order_id: 'o3', transaction_id: '5502', amount_cents: 30500, currency: 'EGP', outcome: 'paid_after_cancel', created_at: new Date(Date.now() - 30e5).toISOString() },
     ],
     order_items: [
       { id: 'i1', order_id: 'o1', variant_id: 'v1', product_name_ar: 'قميص تجريبي', size: 'M', unit_price: 300, qty: 2, line_total: 600 },
@@ -53,6 +58,7 @@ export function createMock() {
         order_items: db.order_items.filter((i) => i.order_id === o.id).map((i) => ({ ...i })),
         order_status_history: db.order_status_history.filter((h) => h.order_id === o.id).map((h) => ({ ...h })),
         shipping_zones: { name_ar: db.shipping_zones.find((z) => z.id === o.zone_id)?.name_ar },
+        payment_events: db.payment_events.filter((e) => e.order_id === o.id).map((e) => ({ ...e })),
       }))
     }
     if (table !== 'products') return rows

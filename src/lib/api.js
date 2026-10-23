@@ -22,6 +22,11 @@ export async function submitCheckout(body) {
   }
 }
 
+/** "Pay now" for an unpaid card order. Returns { ok, payment_url } or { ok: false, error }. */
+export async function retryPayment(token) {
+  return submitCheckout({ action: 'retry_payment', tracking_token: token })
+}
+
 /** One order's public view for a secret tracking token, or null. */
 export async function fetchOrder(token) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_order_by_token`, {

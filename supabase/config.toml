@@ -1,6 +1,9 @@
 # Supabase CLI settings for the Edge Functions in this project.
-# The checkout function is public (customers aren't logged in), so the platform's
-# JWT check is off; the function validates everything itself and only the server
-# holds the service-role key.
+# Both functions are public: customers aren't logged in, and Paymob's server calls the
+# webhook without a Supabase token. Each function validates everything itself, and only
+# the server holds the service-role key and the Paymob secrets.
 [functions.checkout]
+verify_jwt = false
+
+[functions.paymob-webhook]
 verify_jwt = false

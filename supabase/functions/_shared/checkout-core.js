@@ -94,8 +94,8 @@ const PUBLIC_ERRORS = new Set(['invalid_items', 'invalid_customer', 'invalid_pay
  *   ip                                    client IP as seen by the server (may be empty)
  *   ipSalt                                secret salt so stored IP hashes can't be reversed
  *   siteUrl                               e.g. https://yahyastock.com (for the tracking link)
- *   cardEnabled                           false until Paymob is configured (Stage 4)
- *   startCardPayment?(order) → { redirect_url }   Stage 4
+ *   cardEnabled                           true only when Paymob (test) keys are configured
+ *   startCardPayment?(orderRef, trackingUrl) → { ok, redirect_url }   see paymob-core.startPayment
  *   log?(…)                               server-side logging (never sent to the browser)
  * Returns { status, body } — body is safe to send to the browser.
  */
@@ -118,7 +118,8 @@ export async function handleCheckout(body, deps) {
   }
   if (input.expected_total !== undefined) payload.expected_total = input.expected_total
 
-  const { data, error } = await deps.rpc('place_order', { p: payload })
+  // place_order_with_expiry first returns the stock of unpaid card orders whose time ran out
+  const { data, error } = await deps.rpc('place_order_with_expiry', { p: payload })
   if (error || !data) {
     deps.log?.('place_order failed', error)
     return { status: 500, body: { ok: false, error: 'server_error' } }
@@ -142,10 +143,27 @@ export async function handleCheckout(body, deps) {
   }
 
   if (input.payment_method === 'card') {
-    // Stage 4: create the Paymob payment for THIS order's server-side total.
-    const pay = await deps.startCardPayment?.({ ...data, customer: input.customer, tracking_url })
-    if (!pay?.redirect_url) return { status: 502, body: { ok: false, error: 'payment_unavailable', tracking_url } }
+    // Create the Paymob payment for THIS order's server-side total (read again from the database).
+    const pay = await deps.startCardPayment?.({ order_id: data.order_id }, tracking_url)
+    if (!pay?.ok) {
+      // the order stays reserved until it expires; the tracking page offers "pay now" again
+      return { status: 502, body: { ok: false, error: 'payment_unavailable', order_number: result.order_number, tracking_token: token, tracking_url } }
+    }
     result.payment_url = pay.redirect_url
   }
   return { status: 200, body: result }
+}
+
+/** "Pay now" from the tracking page, for a card order that is still awaiting payment. */
+export async function handleRetryPayment(body, deps) {
+  const token = body?.tracking_token
+  if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,128}$/.test(token)) return { status: 400, body: { ok: false, error: 'invalid_input' } }
+  if (!deps.cardEnabled) return { status: 400, body: { ok: false, error: 'card_unavailable' } }
+  const tracking_url = `${(deps.siteUrl ?? '').replace(/\/$/, '')}/#/order/${token}`
+  const pay = await deps.startCardPayment({ token_hash: await sha256Hex(token) }, tracking_url)
+  if (!pay?.ok) {
+    const code = pay?.error === 'not_payable' || pay?.error === 'not_found' ? 'not_payable' : 'payment_unavailable'
+    return { status: code === 'not_payable' ? 409 : 502, body: { ok: false, error: code } }
+  }
+  return { status: 200, body: { ok: true, payment_url: pay.redirect_url } }
 }

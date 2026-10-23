@@ -104,12 +104,58 @@ How checkout stays safe:
 - **Privacy:** orders can't be read from the browser at all, except by the admin. A customer sees only their own order, through a secret 43-character link. Only its fingerprint (SHA-256) is stored, and the link page never shows the full address or phone.
 - **Abuse:** at most 5 orders per hour per device and per phone number.
 
+### Card payments with Paymob (TEST mode)
+
+Card payment runs entirely on the server. The secret keys live only in Supabase function secrets.
+
+**How a card payment works**
+1. The customer chooses *بطاقة بنكية*. The `checkout` function creates the order: stock is reserved for 30 minutes, and the status is *في انتظار الدفع*.
+2. The function asks Paymob for a payment of the **order's total from the database**. The browser is sent to Paymob's own payment page; we never see card numbers.
+3. Paymob's server calls `paymob-webhook`. The function checks the **HMAC-SHA512 signature** with `PAYMOB_HMAC_SECRET`. A bad signature is rejected and nothing is stored.
+4. `apply_payment_event()` finds the order and checks that the **amount and currency match exactly**. It ignores a transaction it has already seen, and only then marks the order **paid**.
+5. Paymob sends the customer back to the tracking page, which **reads the status from the database**. Anything Paymob or anyone else puts in the address bar is ignored.
+
+**Edge cases**
+- **Declined card:** the order stays reserved and the tracking page offers *ادفع الآن* again.
+- **Not paid within 30 minutes:** the order becomes *لم يتم الدفع* and the stock goes back on sale.
+- **Paid after expiry:** the admin panel shows a red "needs refund" warning.
+- **Wrong amount:** the order is never marked paid, and the payment is flagged in the admin panel.
+- **Refunds:** done in Paymob's dashboard. Paymob's refund notification marks the payment *مسترد*.
+
+**Setup (test mode; your Paymob account, no real money)**
+1. Get a Paymob merchant account. In the dashboard, switch to **Test mode** and copy the test keys:
+   - Secret Key
+   - Public Key
+   - HMAC secret
+   - the **Integration ID** of the online card integration
+2. Set them as Supabase function secrets yourself. Never put them in the code, in `.env.local` or in a chat:
+   ```bash
+   supabase secrets set PAYMOB_MODE=test PAYMOB_SECRET_KEY=... PAYMOB_PUBLIC_KEY=... PAYMOB_HMAC_SECRET=... PAYMOB_CARD_INTEGRATION_ID=...
+   ```
+   Optional settings:
+   - `PAYMOB_API_BASE`, default `https://accept.paymob.com`. The intention request goes to `{base}/v1/intention/`.
+   - `PAYMOB_CHECKOUT_URL`, default `https://eg.checkout.paymob.com/`.
+
+   **Confirm both against your Paymob account's documentation.** Paymob's public docs don't show the full intention URL.
+3. Deploy: `supabase functions deploy checkout` and `supabase functions deploy paymob-webhook`.
+4. In Paymob's dashboard, set the integration's **Transaction processed callback** to `https://<project-ref>.supabase.co/functions/v1/paymob-webhook`. The checkout also sends this address with every payment.
+5. In the website's hosting settings, add `VITE_CARD_PAYMENTS=on` and rebuild. The card option is greyed out ("قريباً") until then.
+6. Optional: enable `pg_cron` and run `supabase/cron.sql`, so unpaid orders also expire on quiet days. They already expire whenever someone orders or opens a tracking page.
+7. **Sandbox test:** place a card order with one of Paymob's published test cards (see Paymob's docs).
+   - Check that the order turns *paid* in the admin panel.
+   - Try a declined test card, and let one order expire.
+   - In Supabase → Table Editor → `payment_events`, check every outcome.
+
+**Safety switch:** the functions **refuse live keys** (keys containing `_live_`) unless `PAYMOB_MODE=live` is set. **Don't switch to live without the owner's explicit approval** and a successful sandbox test.
+
 ### Try the full shop locally, without Supabase
 
 `npm run dev:backend` starts a local stand-in for Supabase on port 54321. It runs the real database migrations (in-memory Postgres) and the real checkout logic, with the demo products loaded. Then in a second terminal:
 ```bash
 VITE_SUPABASE_URL=http://localhost:54321 VITE_SUPABASE_ANON_KEY=local npm run dev
 ```
+Add `VITE_CARD_PAYMENTS=on` to try card payments too. They use a **fake Paymob page** served by the local backend, clearly labelled, with "successful payment" and "declined" buttons. It sends properly signed notifications to the real webhook code. No real money is involved and Paymob isn't contacted.
+
 Everything resets when it stops. It's for trying and demoing only; never deploy it. The admin panel still uses `/#/admin?mock` locally.
 
 ### Using the admin panel
@@ -156,6 +202,8 @@ Environment variables are baked in at build time, so re-deploy after changing th
 - [ ] Real products and photos added through the admin panel
 - [ ] **Real delivery fees** set in the admin panel → *التوصيل* (the current ones are placeholders)
 - [ ] Checkout function deployed, `SITE_ORIGINS` / `SITE_URL` set to the real site address, and one real test order placed and checked in the database
+- [ ] Card payments: Paymob **test** keys set as secrets, `paymob-webhook` deployed, callback URL set in Paymob, sandbox payments tested (paid, declined, expired)
+- [ ] **Live payments only with the owner's explicit approval:** live keys plus `PAYMOB_MODE=live`, then one small real payment refunded from the Paymob dashboard
 - [ ] Owner confirms the claims in the rotating hero headlines ("براندات", "كل أسبوع", "أطفال") are true. Edit them in `src/lib/i18n.jsx` (`heroTitles`)
 - [ ] Add a 1200×630 PNG social-share image and an `og:image` tag
 
@@ -173,7 +221,8 @@ src/lib/i18n.jsx           all Arabic/English text, hero headlines
 src/components/            public site sections
 src/admin/                 admin panel (loaded as its own chunk; customers never download it)
 src/components/CheckoutPage.jsx, OrderPage.jsx   checkout and order tracking
-supabase/functions/        Edge Functions (server side): checkout; shared logic in _shared/
+supabase/functions/        Edge Functions (server side): checkout, paymob-webhook; shared, tested logic in _shared/
+supabase/cron.sql          optional: expire unpaid card orders every 5 minutes (needs pg_cron)
 scripts/local-backend.mjs  dev-only local stand-in for Supabase (npm run dev:backend)
 src/dev/mockSupabase.js    dev-only fake database: try the panel offline at /#/admin?mock
 ```
@@ -182,7 +231,8 @@ To try the admin panel without a database while developing: `npm run dev`, open 
 
 ## Limits to know about
 
-- Card payments come in Stage 4. Refunds of card payments are done in the payment provider's dashboard, not on this site. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
+- Refunds of card payments are done in Paymob's dashboard, not on this site.
+- Card payments have been tested against a fake Paymob only. The first real test must be a Paymob **sandbox** payment with your test keys. Real inventory counts, order history or online payment need more backend work (and an Egyptian payment gateway such as Paymob or Fawry with a merchant account).
 - The product list is loaded once per visit; customers see changes on their next page load.
 
 ## Tech

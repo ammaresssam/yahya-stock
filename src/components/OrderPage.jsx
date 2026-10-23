@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLang } from '../lib/i18n'
-import { fetchOrder } from '../lib/api'
+import { fetchOrder, retryPayment } from '../lib/api'
 import { waLink } from '../lib/links'
 import { WhatsAppIcon } from './Icons'
 
@@ -12,6 +12,18 @@ export default function OrderPage({ token }) {
   const [order, setOrder] = useState(undefined) // undefined = loading, null = not found
   const [failed, setFailed] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState(() => window.location.hash.includes('pay=unavailable'))
+
+  const payNow = async () => {
+    setPaying(true)
+    setPayError(false)
+    const res = await retryPayment(token)
+    if (res.ok && res.payment_url) return window.location.assign(res.payment_url)
+    setPaying(false)
+    if (res.error === 'not_payable') load()
+    else setPayError(true)
+  }
 
   const load = useCallback(async () => {
     try {
@@ -67,9 +79,36 @@ export default function OrderPage({ token }) {
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Box label={t('orderNumber')}><span dir="ltr" className="text-2xl font-black">{order.order_number}</span></Box>
               <Box label={t('orderStatus')}>
-                <span className={`text-xl font-black ${['cancelled', 'payment_failed'].includes(order.status) ? 'text-brand' : 'text-ink'}`}>{t('status')[order.status]}</span>
+                <span className={`text-xl font-black ${['cancelled', 'payment_failed'].includes(order.status) ? 'text-brand' : 'text-white'}`}>{t('status')[order.status]}</span>
               </Box>
             </div>
+
+            {order.status === 'pending_payment' && (
+              <div className="mt-6 rounded-[24px] bg-amber-50 p-5 text-amber-950" role="status">
+                <p className="flex items-center gap-2 font-black">
+                  <span className="inline-block size-3 animate-pulse rounded-full bg-amber-500" aria-hidden="true" />
+                  {t('payWaiting')}
+                </p>
+                <p className="mt-1 text-sm">{t('payWaitingHint')}</p>
+                {order.expires_at && <p className="mt-1 text-sm font-bold">{t('payExpiresAt')(new Date(order.expires_at).toLocaleTimeString(lang === 'ar' ? 'ar-EG' : 'en-EG', { timeStyle: 'short' }))}</p>}
+                {payError && <p className="mt-3 rounded-xl bg-white p-3 text-sm font-bold text-brand">{t('payUnavailable')}</p>}
+                {order.can_pay && (
+                  <button type="button" onClick={payNow} disabled={paying} className="btn btn-red mt-4 h-12 w-full px-6 sm:w-auto">
+                    {paying ? t('payOpening') : t('payNow')}
+                  </button>
+                )}
+              </div>
+            )}
+            {order.status === 'payment_failed' && (
+              <div className="mt-6 rounded-[24px] bg-paper p-5">
+                <p className="font-black text-ink">{t('payFailedTitle')}</p>
+                <p className="mt-1 text-sm text-muted">{t('payFailedText')}</p>
+                <a href="#shop" className="btn btn-ink mt-4 h-11 px-6">{t('backToShop')}</a>
+              </div>
+            )}
+            {order.payment_method === 'card' && order.payment_status === 'paid' && !['cancelled', 'payment_failed'].includes(order.status) && (
+              <p className="mt-4 rounded-2xl bg-emerald-50 p-3 font-bold text-emerald-800">{t('payPaid')}</p>
+            )}
 
             {!['cancelled', 'payment_failed', 'pending_payment'].includes(order.status) && <Timeline current={order.status} history={order.history} date={date} />}
 

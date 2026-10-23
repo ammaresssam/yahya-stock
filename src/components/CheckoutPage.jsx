@@ -81,6 +81,14 @@ export default function CheckoutPage() {
       return
     }
 
+    if (res.error === 'payment_unavailable' && res.tracking_token) {
+      // the order exists and is reserved; the tracking page lets the customer pay again
+      rememberOrder({ number: res.order_number, token: res.tracking_token, at: Date.now(), lang })
+      cart.clear()
+      window.location.hash = `#/order/${res.tracking_token}?pay=unavailable`
+      return
+    }
+
     switch (res.error) {
       case 'invalid_input':
       case 'invalid_customer': {
@@ -156,6 +164,7 @@ export default function CheckoutPage() {
               <PayOption checked={method === 'cod'} onChange={() => setMethod('cod')} title={t('payCod')} hint={t('payCodHint')} />
               <PayOption checked={method === 'card'} onChange={() => setMethod('card')} title={t('payCard')} hint={cardPaymentsEnabled ? 'Visa · Mastercard · Meeza' : t('payCardSoon')} disabled={!cardPaymentsEnabled} />
             </div>
+            {method === 'card' && <p className="mt-3 text-sm text-muted">🔒 {t('payCardHint')}</p>}
           </fieldset>
         </div>
 
