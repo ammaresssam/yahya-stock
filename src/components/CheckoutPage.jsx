@@ -105,7 +105,7 @@ export default function CheckoutPage() {
         // shrink the cart to what's actually available, then let the customer review
         for (const it of res.items ?? []) {
           const line = cart.lines.find((l) => l.variant.id === it.variant_id)
-          if (line) cart.setQty(line.id, line.size, it.available)
+          if (line) cart.setQty(line.id, line.size, it.available, line.color)
         }
         setConfirmedTotal(null)
         setBanner({ kind: 'warn', text: t('errUnavailable') })
@@ -172,11 +172,11 @@ export default function CheckoutPage() {
           <h2 className="text-xl font-bold text-ink">{t('summary')}</h2>
           <ul className="mt-4 divide-y divide-line">
             {cart.lines.map((l) => (
-              <li key={l.id + l.size} className="flex items-center gap-3 py-3">
-                {l.product.image ? <img src={l.product.image} alt="" className="size-14 shrink-0 rounded-xl object-cover" /> : <GarmentArt {...l.product.art} bg="#efece8" className="size-14 shrink-0 rounded-xl p-1" />}
+              <li key={l.variant.id} className="flex items-center gap-3 py-3">
+                {l.product.image ? <img src={l.product.image} alt="" className="size-14 shrink-0 rounded-xl object-cover" /> : <GarmentArt {...l.product.art} color={l.variant.color?.hex ?? l.product.art?.color} bg="#efece8" className="size-14 shrink-0 rounded-xl p-1" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold text-ink">{pick(l.product.name)}</p>
-                  <p className="text-sm text-muted">{t('size')} <span dir="ltr">{l.size}</span> × {num(l.qty)}</p>
+                  <p className="text-sm text-muted">{l.variant.color && <>{pick({ ar: l.variant.color.ar, en: l.variant.color.en || l.variant.color.ar })} · </>}{t('size')} <span dir="ltr">{l.size}</span> × {num(l.qty)}</p>
                 </div>
                 <span className="font-bold">{price(l.unitPrice * l.qty)}</span>
               </li>

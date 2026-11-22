@@ -4,11 +4,12 @@ import { useCart } from '../lib/cart'
 import { useData } from '../lib/store'
 import { checkoutAvailable } from '../lib/api'
 import { waLink } from '../lib/links'
-import { LOW_STOCK } from '../lib/product'
+import { LOW_STOCK, colorKey, findVariant } from '../lib/product'
 import { discountOf } from '../lib/catalog'
 import GarmentArt from './GarmentArt'
 import Gallery from './Gallery'
 import Rail from './Rail'
+import Swatches from './Swatches'
 import { BagIcon, MinusIcon, PlusIcon, WhatsAppIcon } from './Icons'
 import { policies } from '../data/policies'
 
@@ -18,17 +19,22 @@ export default function ProductPage({ id }) {
   const cart = useCart()
   const p = products.find((x) => String(x.id) === id)
 
-  const inStock = p ? p.variants.filter((v) => v.stock > 0) : []
+  const firstColor = p?.colors.length ? (p.colors.find((c) => c.stock > 0) ?? p.colors[0]).key : ''
+  const [color, setColor] = useState(firstColor)
+  const inStock = p ? p.variants.filter((v) => v.stock > 0 && colorKey(v) === color) : []
   const [size, setSize] = useState(null)
   const [qty, setQty] = useState(1)
   const [img, setImg] = useState(0)
   const [gallery, setGallery] = useState(null)
   const [msg, setMsg] = useState(null) // { kind, text }
 
+  // when the product loads (or changes), start on the first colour in stock
+  useEffect(() => { setColor(firstColor) }, [p?.id, firstColor])
+
   // pick the only available size automatically
   useEffect(() => {
     if (p && size === null && inStock.length === 1) setSize(inStock[0].size)
-  }, [p]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [p, color]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // page title for sharing / browser tabs
   useEffect(() => {
@@ -38,14 +44,14 @@ export default function ProductPage({ id }) {
     return () => { document.title = prev }
   }, [p, pick])
 
-  const chosen = p?.variants.find((v) => v.size === size)
-  const inCart = chosen ? cart.inCartQty(p.id, chosen.size) : 0
+  const chosen = size ? findVariant(p, size, color) : undefined
+  const inCart = chosen ? cart.inCartQty(p.id, chosen.size, color) : 0
   const canAdd = chosen ? Math.max(0, chosen.stock - inCart) : 0
 
   // keep the quantity within what can still be added
   useEffect(() => {
     if (chosen) setQty((q) => Math.min(Math.max(1, q), Math.max(1, canAdd)))
-  }, [chosen?.size, canAdd]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [chosen?.id, canAdd]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const related = useMemo(() => (p ? products.filter((x) => x.category === p.category && x.id !== p.id && x.totalStock > 0).slice(0, 10) : []), [p, products])
 
@@ -70,10 +76,20 @@ export default function ProductPage({ id }) {
   const pct = chosen ? discountOf(chosen) : onSale ? Math.round((1 - shownPrice / shownOld) * 100) : 0
   const sold = p.totalStock === 0
   const images = p.images
+  const colorObj = p.colors.find((c) => c.key === color)
+  const colorName = colorObj ? pick(colorObj.name) : ''
+  const art = colorObj?.hex ? { ...p.art, color: colorObj.hex } : p.art
+
+  const pickColor = (key) => {
+    setColor(key)
+    setMsg(null)
+    // keep the size only if this colour has it in stock
+    if (size && !(findVariant(p, size, key)?.stock > 0)) setSize(null)
+  }
 
   const add = (thenCheckout = false) => {
     if (!chosen) return setMsg({ kind: 'error', text: t('pickSizeFirst') })
-    const n = cart.addMany(p.id, chosen.size, qty)
+    const n = cart.addMany(p.id, chosen.size, qty, color)
     if (!n) return setMsg({ kind: 'error', text: t('maxInCart') })
     setMsg({ kind: 'ok', text: t('addedN')(num(n)) })
     setQty(1)
@@ -108,7 +124,7 @@ export default function ProductPage({ id }) {
                     <img src={images[img]} alt={`${name} — ${t('photoN')(num(img + 1))}`} className="aspect-[4/5] w-full object-cover" fetchPriority="high" />
                   </button>
                 ) : (
-                  <GarmentArt {...p.art} bg="#efece8" label={`${name} — ${t('illustration')}`} className="aspect-[4/5] p-12" />
+                  <GarmentArt {...art} bg="#efece8" label={`${name} — ${t('illustration')}`} className="aspect-[4/5] p-12" />
                 )}
                 <div className="pointer-events-none absolute start-3 top-3 flex flex-col items-start gap-1.5">
                   {pct > 0 && !sold && <span className="sale-badge text-sm">{t('off')(num(pct))}</span>}
@@ -144,23 +160,34 @@ export default function ProductPage({ id }) {
 
               <StockLine p={p} chosen={chosen} />
 
+              {/* colours */}
+              {p.colors.length > 0 && (
+                <div className="mt-6">
+                  <p id="color-label" className="mb-2 text-sm text-muted">{t('color')}: <b className="text-ink">{colorName}</b></p>
+                  <Swatches colors={p.colors} value={color} onChange={pickColor} labelId="color-label" />
+                </div>
+              )}
+
               {/* sizes */}
-              <fieldset className="mt-6">
+              <fieldset className={p.colors.length ? 'mt-5' : 'mt-6'}>
                 <legend className="mb-2 text-sm text-muted">{t('chooseSize')}{size && <>: <b className="text-ink" dir="ltr">{size}</b></>}</legend>
                 <div className="flex flex-wrap gap-2">
-                  {p.variants.map((v) => (
-                    <button
-                      key={v.id}
-                      type="button"
-                      disabled={v.stock === 0}
-                      aria-pressed={size === v.size}
-                      aria-label={v.stock === 0 ? `${v.size} — ${t('sizeSoldOut')}` : v.size}
-                      onClick={() => { setSize(v.size); setMsg(null) }}
-                      className={`size-chip-lg ${v.stock === 0 ? 'line-through' : ''}`}
-                    >
-                      {v.size}
-                    </button>
-                  ))}
+                  {p.sizes.map((s) => {
+                    const out = !(findVariant(p, s, color)?.stock > 0)
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        disabled={out}
+                        aria-pressed={size === s}
+                        aria-label={out ? `${s} — ${t('sizeSoldOut')}` : s}
+                        onClick={() => { setSize(s); setMsg(null) }}
+                        className="size-chip-lg"
+                      >
+                        {s}
+                      </button>
+                    )
+                  })}
                 </div>
               </fieldset>
 
@@ -195,7 +222,7 @@ export default function ProductPage({ id }) {
                 )}
               </div>
 
-              <a href={waLink(t('askMsg')(name, size))} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 font-semibold text-ink underline-offset-4 hover:underline">
+              <a href={waLink(t('askMsg')(colorName ? `${name} (${colorName})` : name, size))} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 font-semibold text-ink underline-offset-4 hover:underline">
                 <WhatsAppIcon className="size-5 text-[#1fa855]" />
                 {t('askWhatsapp')}
               </a>

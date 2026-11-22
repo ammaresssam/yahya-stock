@@ -75,10 +75,10 @@
   .cat-link[aria-current="true"]::after { transform: scaleX(1); }
 
   .size-chip {
-    @apply min-w-9 border border-ink/20 bg-transparent px-2 py-1 text-[13px] font-medium sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
+    @apply min-w-9 border border-ink/20 bg-transparent px-2 py-1 text-[13px] font-medium sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:hover:border-line;
   }
   .size-chip[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
-  .size-chip-lg { @apply h-11 min-w-14 border border-ink/30 bg-transparent px-5 text-base font-medium text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line; }
+  .size-chip-lg { @apply h-11 min-w-14 border border-ink/30 bg-transparent px-5 text-base font-medium text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:hover:border-line; }
   .size-chip-lg[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
 
   .filter-tab {
@@ -179,3 +179,20 @@ details.accordion[open] .acc-icon { transform: rotate(45deg); }
 @keyframes marquee { to { transform: translateX(-50%); } }
 @keyframes marquee-rtl { to { transform: translateX(50%); } }
 @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+
+/* sold-out size: greyed out with a diagonal slash, like the reference */
+.size-chip:disabled, .size-chip-lg:disabled {
+  color: var(--color-muted);
+  border-color: var(--color-line);
+  background-image: linear-gradient(to top right, transparent calc(50% - .6px), color-mix(in srgb, var(--color-muted) 70%, transparent) calc(50% - .6px), color-mix(in srgb, var(--color-muted) 70%, transparent) calc(50% + .6px), transparent calc(50% + .6px));
+  opacity: 1;
+}
+
+/* colour swatches */
+.swatch { position: relative; display: inline-grid; padding: 2px; border: 1px solid transparent; cursor: pointer; }
+.swatch .swatch-fill { display: grid; place-items: center; width: 100%; height: 100%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12); }
+.swatch:hover { border-color: var(--color-line); }
+.swatch.is-on { border-color: var(--color-ink); }
+.swatch.is-out .swatch-fill { opacity: .55; }
+.swatch.is-out::after { content: ''; position: absolute; inset: 2px; background: linear-gradient(to top right, transparent calc(50% - .75px), var(--color-ink) calc(50% - .75px), var(--color-ink) calc(50% + .75px), transparent calc(50% + .75px)); pointer-events: none; }
+.swatch:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }

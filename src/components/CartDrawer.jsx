@@ -8,6 +8,7 @@ import { BagIcon, CloseIcon, MinusIcon, PlusIcon, TrashIcon, WhatsAppIcon } from
 
 export default function CartDrawer() {
   const { t, pick, price, num, dir } = useLang()
+  const colorName = (c) => pick({ ar: c.ar, en: c.en || c.ar })
   const cart = useCart()
   const [name, setName] = useState('')
   const [area, setArea] = useState('')
@@ -39,7 +40,7 @@ export default function CartDrawer() {
 
   const message = () => {
     const lines = cart.lines.map(
-      (l, i) => `${i + 1}) ${pick(l.product.name)} — ${t('size')} ${l.size} × ${l.qty} — ${price(l.unitPrice * l.qty)}`,
+      (l, i) => `${i + 1}) ${pick(l.product.name)} — ${l.variant.color ? `${t('color')} ${colorName(l.variant.color)} — ` : ''}${t('size')} ${l.size} × ${l.qty} — ${price(l.unitPrice * l.qty)}`,
     )
     return [
       t('orderIntro'),
@@ -102,26 +103,26 @@ export default function CartDrawer() {
             )}
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {cart.lines.map((l) => (
-                <li key={l.id + l.size} className="flex gap-4 py-5">
+                <li key={l.variant.id} className="flex gap-4 py-5">
                   {l.product.image ? (
                     <img src={l.product.image} alt="" className="aspect-[4/5] w-20 shrink-0 rounded-md object-cover" />
                   ) : (
-                    <GarmentArt {...l.product.art} bg="#efece8" className="aspect-[4/5] w-20 shrink-0 rounded-md p-1.5" />
+                    <GarmentArt {...l.product.art} color={l.variant.color?.hex ?? l.product.art?.color} bg="#efece8" className="aspect-[4/5] w-20 shrink-0 rounded-md p-1.5" />
                   )}
                   <div className="min-w-0 flex-1">
                     <a href={`#/product/${l.product.id}`} onClick={() => cart.setOpen(false)} className="font-semibold text-ink underline-offset-4 hover:underline">{pick(l.product.name)}</a>
-                    <p className="text-sm text-muted">{t('size')}: <b dir="ltr" className="text-ink">{l.size}</b> · {t('unitPrice')(price(l.unitPrice))}</p>
+                    <p className="text-sm text-muted">{l.variant.color && <>{t('color')}: <b className="text-ink">{colorName(l.variant.color)}</b> · </>}{t('size')}: <b dir="ltr" className="text-ink">{l.size}</b> · {t('unitPrice')(price(l.unitPrice))}</p>
                     {l.qty >= l.available && <p className="text-xs font-bold text-amber-600">{t('leftOnly')(num(l.available))}</p>}
                     <div className="mt-2 flex items-center justify-between">
                       <div className="flex items-center rounded-md border border-ink/30">
-                        <button type="button" className="qty-btn disabled:opacity-30" disabled={l.qty >= l.available} aria-label={t('increase')} onClick={() => cart.setQty(l.id, l.size, l.qty + 1)}><PlusIcon className="size-4" /></button>
+                        <button type="button" className="qty-btn disabled:opacity-30" disabled={l.qty >= l.available} aria-label={t('increase')} onClick={() => cart.setQty(l.id, l.size, l.qty + 1, l.color)}><PlusIcon className="size-4" /></button>
                         <span className="w-7 text-center font-bold" aria-label={t('qty')}>{num(l.qty)}</span>
-                        <button type="button" className="qty-btn" aria-label={t('decrease')} onClick={() => cart.setQty(l.id, l.size, l.qty - 1)}><MinusIcon className="size-4" /></button>
+                        <button type="button" className="qty-btn" aria-label={t('decrease')} onClick={() => cart.setQty(l.id, l.size, l.qty - 1, l.color)}><MinusIcon className="size-4" /></button>
                       </div>
                       <span className="font-bold text-ink">{price(l.unitPrice * l.qty)}</span>
                     </div>
                   </div>
-                  <button type="button" onClick={() => cart.setQty(l.id, l.size, 0)} aria-label={`${t('remove')} ${pick(l.product.name)}`} className="grid size-9 shrink-0 place-items-center self-start rounded-md text-muted hover:bg-paper hover:text-brand">
+                  <button type="button" onClick={() => cart.setQty(l.id, l.size, 0, l.color)} aria-label={`${t('remove')} ${pick(l.product.name)}`} className="grid size-9 shrink-0 place-items-center self-start rounded-md text-muted hover:bg-paper hover:text-brand">
                     <TrashIcon className="size-[18px]" />
                   </button>
                 </li>

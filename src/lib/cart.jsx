@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import { CartContext } from './contexts'
 import { useData } from './store'
+import { findVariant } from './product'
 
 const KEY = 'ys-cart'
 
@@ -29,7 +30,7 @@ export function CartProvider({ children }) {
     if (!products.length) return
     let changed = false
     const next = items.flatMap((i) => {
-      const max = products.find((p) => p.id === i.id)?.variants.find((v) => v.size === i.size)?.stock ?? 0
+      const max = findVariant(products.find((p) => p.id === i.id), i.size, i.color)?.stock ?? 0
       if (i.qty <= max) return [i]
       changed = true
       return max > 0 ? [{ ...i, qty: max }] : []
@@ -41,12 +42,14 @@ export function CartProvider({ children }) {
   }, [products]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = useMemo(() => {
-    // A cart item is { id: productId, size, qty }; price and stock come from the size (variant).
-    const variantOf = (id, size) => products.find((p) => p.id === id)?.variants.find((v) => v.size === size)
+    // A cart item is { id: productId, size, color, qty } (color '' = no colours);
+    // price and stock come from that colour + size (the variant).
+    const variantOf = (id, size, color) => findVariant(products.find((p) => p.id === id), size, color)
+    const same = (i, id, size, color) => i.id === id && i.size === size && (i.color ?? '') === (color ?? '')
     const lines = items
       .map((i) => {
         const product = products.find((p) => p.id === i.id)
-        const variant = product?.variants.find((v) => v.size === i.size)
+        const variant = findVariant(product, i.size, i.color)
         return { ...i, product, variant, unitPrice: variant?.price ?? 0, available: variant?.stock ?? 0 }
       })
       .filter((l) => l.product && l.variant)
@@ -59,38 +62,38 @@ export function CartProvider({ children }) {
       open,
       setOpen,
       // returns false when the size is sold out or the cart already holds all available pieces
-      add: (id, size) => {
-        const stock = variantOf(id, size)?.stock ?? 0
-        const inCart = items.find((i) => i.id === id && i.size === size)?.qty ?? 0
+      add: (id, size, color = '') => {
+        const stock = variantOf(id, size, color)?.stock ?? 0
+        const inCart = items.find((i) => same(i, id, size, color))?.qty ?? 0
         if (inCart >= stock) return false
         setItems((prev) => {
-          const hit = prev.find((i) => i.id === id && i.size === size)
+          const hit = prev.find((i) => same(i, id, size, color))
           if (hit) return prev.map((i) => (i === hit ? { ...i, qty: i.qty + 1 } : i))
-          return [...prev, { id, size, qty: 1 }]
+          return [...prev, { id, size, color, qty: 1 }]
         })
         return true
       },
       // adds up to `qty` pieces, never more than what's left in stock; returns how many were added
-      addMany: (id, size, qty) => {
-        const stock = variantOf(id, size)?.stock ?? 0
-        const inCart = items.find((i) => i.id === id && i.size === size)?.qty ?? 0
+      addMany: (id, size, qty, color = '') => {
+        const stock = variantOf(id, size, color)?.stock ?? 0
+        const inCart = items.find((i) => same(i, id, size, color))?.qty ?? 0
         const n = Math.max(0, Math.min(qty, stock - inCart))
         if (!n) return 0
         setItems((prev) => {
-          const hit = prev.find((i) => i.id === id && i.size === size)
+          const hit = prev.find((i) => same(i, id, size, color))
           if (hit) return prev.map((i) => (i === hit ? { ...i, qty: i.qty + n } : i))
-          return [...prev, { id, size, qty: n }]
+          return [...prev, { id, size, color, qty: n }]
         })
         return n
       },
-      inCartQty: (id, size) => items.find((i) => i.id === id && i.size === size)?.qty ?? 0,
-      setQty: (id, size, qty) => {
-        const stock = variantOf(id, size)?.stock ?? 0
+      inCartQty: (id, size, color = '') => items.find((i) => same(i, id, size, color))?.qty ?? 0,
+      setQty: (id, size, qty, color = '') => {
+        const stock = variantOf(id, size, color)?.stock ?? 0
         const next = Math.min(qty, stock)
         setItems((prev) =>
           next <= 0
-            ? prev.filter((i) => !(i.id === id && i.size === size))
-            : prev.map((i) => (i.id === id && i.size === size ? { ...i, qty: next } : i)),
+            ? prev.filter((i) => !same(i, id, size, color))
+            : prev.map((i) => (same(i, id, size, color) ? { ...i, qty: next } : i)),
         )
       },
       clear: () => setItems([]),

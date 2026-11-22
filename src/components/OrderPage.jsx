@@ -126,7 +126,7 @@ export default function OrderPage({ token }) {
                   <li key={k} className="flex justify-between gap-3 py-3">
                     <span>
                       <span className="block font-bold text-ink">{pick({ ar: i.name_ar, en: i.name_en || i.name_ar })}</span>
-                      <span className="text-sm text-muted">{t('size')} <span dir="ltr">{i.size}</span> × {num(i.qty)}</span>
+                      <span className="text-sm text-muted">{i.color_ar && <>{pick({ ar: i.color_ar, en: i.color_en || i.color_ar })} · </>}{t('size')} <span dir="ltr">{i.size}</span> × {num(i.qty)}</span>
                     </span>
                     <span className="font-bold">{price(i.line_total)}</span>
                   </li>

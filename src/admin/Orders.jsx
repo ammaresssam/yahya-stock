@@ -223,7 +223,7 @@ function OrderDetail({ order: o, onClose, onChanged, notify }) {
               <li key={i.id} className="flex justify-between gap-3 px-4 py-3">
                 <span>
                   <span className="block font-bold text-ink">{i.product_name_ar}</span>
-                  <span className="text-sm text-muted">مقاس <b dir="ltr">{i.size}</b> × {i.qty} · {money(i.unit_price)} للقطعة</span>
+                  <span className="text-sm text-muted">{i.color_ar && <>اللون <b>{i.color_ar}</b> · </>}مقاس <b dir="ltr">{i.size}</b> × {i.qty} · {money(i.unit_price)} للقطعة</span>
                 </span>
                 <b className="text-ink">{money(i.line_total)}</b>
               </li>
