@@ -10,11 +10,11 @@ export default function MobileNav({ route }) {
   const cart = useCart()
   const { browse } = useCatalog()
 
-  const item = 'flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-bold'
-  const tone = (on) => (on ? 'text-white' : 'text-white/60')
+  const item = 'flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-semibold'
+  const tone = (on) => (on ? 'text-ink' : 'text-muted')
 
   return (
-    <nav aria-label={t('menu')} className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] text-white backdrop-blur md:hidden">
+    <nav aria-label={t('menu')} className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] text-ink backdrop-blur md:hidden">
       <ul className="flex h-16">
         <li className="flex flex-1">
           <a href="#home" onClick={() => window.scrollTo({ top: 0 })} aria-current={route === 'home' ? 'page' : undefined} className={`${item} ${tone(route === 'home')}`}>
@@ -23,7 +23,7 @@ export default function MobileNav({ route }) {
           </a>
         </li>
         <li className="flex flex-1">
-          <button type="button" onClick={() => browse({})} className={`${item} ${tone(false)}`}>
+          <button type="button" onClick={() => browse({})} aria-current={route === 'shop' ? 'page' : undefined} className={`${item} ${tone(route === 'shop')}`}>
             <GridIcon className="size-6" />
             {t('shop')}
           </button>
@@ -32,7 +32,7 @@ export default function MobileNav({ route }) {
           <button type="button" onClick={() => cart.setOpen(true)} aria-label={`${t('cart')} (${cart.count})`} className={`${item} ${tone(cart.open)}`}>
             <span className="relative">
               <BagIcon className="size-6" />
-              {cart.count > 0 && <span className="absolute -top-1.5 -end-2.5 grid min-w-[18px] place-items-center rounded-full bg-brand px-1 text-[10px] font-black leading-[18px] text-white">{num(cart.count)}</span>}
+              {cart.count > 0 && <span className="absolute -top-1.5 -end-2.5 grid min-w-[18px] place-items-center rounded-full bg-ink-900 px-1 text-[10px] font-medium leading-[18px] text-white">{num(cart.count)}</span>}
             </span>
             {t('cart')}
           </button>
@@ -44,7 +44,7 @@ export default function MobileNav({ route }) {
           </a>
         </li>
         <li className="flex flex-1">
-          <a href={waLink()} target="_blank" rel="noopener noreferrer" className={`${item} text-[#25d366]`}>
+          <a href={waLink()} target="_blank" rel="noopener noreferrer" className={`${item} text-[#178f47]`}>
             <WhatsAppIcon className="size-6" />
             {t('whatsapp')}
           </a>

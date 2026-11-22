@@ -125,8 +125,12 @@ export function createMock() {
     for (const v of p.variants) {
       const size = (v.size ?? '').trim()
       if (!size) return fail('size_required')
-      if (seen.has(size.toLowerCase())) return fail('duplicate_size')
-      seen.add(size.toLowerCase())
+      const colorAr = (v.color_ar ?? '').trim()
+      if (!colorAr && ((v.color_en ?? '').trim() || v.color_hex)) return fail('color_name_required')
+      if (v.color_hex && !/^#[0-9a-fA-F]{6}$/.test(v.color_hex)) return fail('violates check constraint')
+      const key = `${colorAr.toLowerCase()}|${size.toLowerCase()}`
+      if (seen.has(key)) return fail('duplicate_size')
+      seen.add(key)
       if (!(v.price > 0) || !(v.stock_qty >= 0) || (v.compare_at_price != null && !(v.compare_at_price > v.price))) return fail('violates check constraint')
     }
     let id = p.id
@@ -142,7 +146,7 @@ export function createMock() {
     const keep = p.variants.filter((v) => v.id).map((v) => v.id)
     db.product_variants = db.product_variants.filter((v) => v.product_id !== id || keep.includes(v.id))
     p.variants.forEach((v, position) => {
-      const row = { size: v.size.trim(), price: v.price, compare_at_price: v.compare_at_price ?? null, stock_qty: v.stock_qty, position }
+      const row = { size: v.size.trim(), color_ar: (v.color_ar ?? '').trim(), color_en: (v.color_en ?? '').trim(), color_hex: v.color_hex || null, price: v.price, compare_at_price: v.compare_at_price ?? null, stock_qty: v.stock_qty, position }
       const existing = v.id && db.product_variants.find((x) => x.id === v.id && x.product_id === id)
       if (existing) Object.assign(existing, row)
       else db.product_variants.push({ id: uid(), product_id: id, ...row })

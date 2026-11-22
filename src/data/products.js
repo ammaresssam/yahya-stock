@@ -52,6 +52,14 @@ export const products = [
     isNew: false,
     featured: true,
     art: { type: 'tee', color: '#e3262d', bg: '#f6e4e2' },
+    // مثال للألوان: كل لون بالمقاسات اللي فوق، و soldOut = المقاسات الخلصانة في اللون ده
+    // Colour example: each colour comes in the sizes above; soldOut = sizes gone in that colour
+    colors: [
+      { ar: 'أحمر', en: 'Red', hex: '#c8433a', soldOut: ['XL'] },
+      { ar: 'كحلي', en: 'Navy', hex: '#28324a' },
+      { ar: 'أبيض', en: 'White', hex: '#f7f5f1', soldOut: ['S'] },
+      { ar: 'أسود', en: 'Black', hex: '#1f1e1d' },
+    ],
   },
   {
     id: 'm-03',
@@ -64,6 +72,11 @@ export const products = [
     isNew: true,
     featured: true,
     art: { type: 'hoodie', color: '#55535a', bg: '#e9e7e3' },
+    colors: [
+      { ar: 'رمادي', en: 'Grey', hex: '#8d8a86', soldOut: ['XL'] },
+      { ar: 'أسود', en: 'Black', hex: '#1f1e1d' },
+      { ar: 'زيتي', en: 'Olive', hex: '#5f6447', soldOut: ['L', 'XXL'] },
+    ],
   },
   {
     id: 'm-04',
@@ -115,6 +128,11 @@ export const products = [
     isNew: true,
     featured: true,
     art: { type: 'dress', color: '#e3262d', bg: '#f6e4e2' },
+    colors: [
+      { ar: 'أحمر', en: 'Red', hex: '#c8433a' },
+      { ar: 'أزرق سماوي', en: 'Sky blue', hex: '#8fb3d9', soldOut: ['L'] },
+      { ar: 'بيج', en: 'Beige', hex: '#d8c7ad' },
+    ],
   },
   {
     id: 'w-02',

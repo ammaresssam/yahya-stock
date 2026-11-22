@@ -4,12 +4,14 @@ import { useCart } from '../lib/cart'
 import { useData } from '../lib/store'
 import { checkoutAvailable } from '../lib/api'
 import { waLink } from '../lib/links'
-import { LOW_STOCK } from '../lib/product'
+import { LOW_STOCK, colorKey, findVariant } from '../lib/product'
 import { discountOf } from '../lib/catalog'
 import GarmentArt from './GarmentArt'
 import Gallery from './Gallery'
 import Rail from './Rail'
+import Swatches from './Swatches'
 import { BagIcon, MinusIcon, PlusIcon, WhatsAppIcon } from './Icons'
+import { policies } from '../data/policies'
 
 export default function ProductPage({ id }) {
   const { t, pick, price, num, dir } = useLang()
@@ -17,17 +19,22 @@ export default function ProductPage({ id }) {
   const cart = useCart()
   const p = products.find((x) => String(x.id) === id)
 
-  const inStock = p ? p.variants.filter((v) => v.stock > 0) : []
+  const firstColor = p?.colors.length ? (p.colors.find((c) => c.stock > 0) ?? p.colors[0]).key : ''
+  const [color, setColor] = useState(firstColor)
+  const inStock = p ? p.variants.filter((v) => v.stock > 0 && colorKey(v) === color) : []
   const [size, setSize] = useState(null)
   const [qty, setQty] = useState(1)
   const [img, setImg] = useState(0)
   const [gallery, setGallery] = useState(null)
   const [msg, setMsg] = useState(null) // { kind, text }
 
+  // when the product loads (or changes), start on the first colour in stock
+  useEffect(() => { setColor(firstColor) }, [p?.id, firstColor])
+
   // pick the only available size automatically
   useEffect(() => {
     if (p && size === null && inStock.length === 1) setSize(inStock[0].size)
-  }, [p]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [p, color]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // page title for sharing / browser tabs
   useEffect(() => {
@@ -37,24 +44,24 @@ export default function ProductPage({ id }) {
     return () => { document.title = prev }
   }, [p, pick])
 
-  const chosen = p?.variants.find((v) => v.size === size)
-  const inCart = chosen ? cart.inCartQty(p.id, chosen.size) : 0
+  const chosen = size ? findVariant(p, size, color) : undefined
+  const inCart = chosen ? cart.inCartQty(p.id, chosen.size, color) : 0
   const canAdd = chosen ? Math.max(0, chosen.stock - inCart) : 0
 
   // keep the quantity within what can still be added
   useEffect(() => {
     if (chosen) setQty((q) => Math.min(Math.max(1, q), Math.max(1, canAdd)))
-  }, [chosen?.size, canAdd]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [chosen?.id, canAdd]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const related = useMemo(() => (p ? products.filter((x) => x.category === p.category && x.id !== p.id && x.totalStock > 0).slice(0, 10) : []), [p, products])
 
   if (!p) {
     return (
       <section className="mx-auto max-w-3xl px-4 py-16 text-center">
-        {loading ? <div className="mx-auto aspect-[4/5] max-w-sm animate-pulse rounded-[28px] bg-paper" /> : (
+        {loading ? <div className="mx-auto aspect-[4/5] max-w-sm animate-pulse rounded-lg bg-paper" /> : (
           <>
             <p className="text-lg font-bold text-ink">{t('productNotFound')}</p>
-            <a href="#shop" className="btn btn-ink mt-5 h-11 px-6">{t('backToShop')}</a>
+            <a href="#/shop" className="btn btn-ink mt-5 h-11 px-6">{t('backToShop')}</a>
           </>
         )}
       </section>
@@ -69,10 +76,20 @@ export default function ProductPage({ id }) {
   const pct = chosen ? discountOf(chosen) : onSale ? Math.round((1 - shownPrice / shownOld) * 100) : 0
   const sold = p.totalStock === 0
   const images = p.images
+  const colorObj = p.colors.find((c) => c.key === color)
+  const colorName = colorObj ? pick(colorObj.name) : ''
+  const art = colorObj?.hex ? { ...p.art, color: colorObj.hex } : p.art
+
+  const pickColor = (key) => {
+    setColor(key)
+    setMsg(null)
+    // keep the size only if this colour has it in stock
+    if (size && !(findVariant(p, size, key)?.stock > 0)) setSize(null)
+  }
 
   const add = (thenCheckout = false) => {
     if (!chosen) return setMsg({ kind: 'error', text: t('pickSizeFirst') })
-    const n = cart.addMany(p.id, chosen.size, qty)
+    const n = cart.addMany(p.id, chosen.size, qty, color)
     if (!n) return setMsg({ kind: 'error', text: t('maxInCart') })
     setMsg({ kind: 'ok', text: t('addedN')(num(n)) })
     setQty(1)
@@ -84,12 +101,12 @@ export default function ProductPage({ id }) {
 
   return (
     <>
-      <section className="bg-white py-6 sm:py-10" aria-labelledby="product-title">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="bg-page pb-12 pt-5 sm:pb-16 sm:pt-8" aria-labelledby="product-title">
+        <div className="page-width">
           <nav aria-label="breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-muted">
             <a href="#home" className="hover:text-ink">{t('home')}</a>
             <span aria-hidden="true">{dir === 'rtl' ? '‹' : '›'}</span>
-            <a href="#shop" className="hover:text-ink">{t('shop')}</a>
+            <a href="#/shop" className="hover:text-ink">{t('shop')}</a>
             {category && (
               <>
                 <span aria-hidden="true">{dir === 'rtl' ? '‹' : '›'}</span>
@@ -98,20 +115,20 @@ export default function ProductPage({ id }) {
             )}
           </nav>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:gap-12">
+          <div className="grid items-start gap-7 md:grid-cols-[1.2fr_1fr] lg:gap-14">
             {/* ---------- photos ---------- */}
             <div>
-              <div className="relative overflow-hidden rounded-[24px] bg-paper">
+              <div className="relative overflow-hidden bg-paper">
                 {images.length ? (
                   <button type="button" onClick={() => setGallery(img)} className="block w-full" aria-label={t('viewPhotos')(num(images.length))}>
                     <img src={images[img]} alt={`${name} — ${t('photoN')(num(img + 1))}`} className="aspect-[4/5] w-full object-cover" fetchPriority="high" />
                   </button>
                 ) : (
-                  <GarmentArt {...p.art} label={`${name} — ${t('illustration')}`} className="aspect-[4/5] p-12" />
+                  <GarmentArt {...art} bg="#efece8" label={`${name} — ${t('illustration')}`} className="aspect-[4/5] p-12" />
                 )}
                 <div className="pointer-events-none absolute start-3 top-3 flex flex-col items-start gap-1.5">
-                  {pct > 0 && !sold && <span className="sale-badge text-base">{t('off')(num(pct))}</span>}
-                  {p.isNew && <span className="badge bg-ink text-white">{t('newBadge')}</span>}
+                  {pct > 0 && !sold && <span className="sale-badge text-sm">{t('off')(num(pct))}</span>}
+                  {p.isNew && <span className="badge bg-white text-ink ring-1 ring-ink/10">{t('newBadge')}</span>}
                 </div>
                 {!live && <span className="badge absolute end-3 top-3 bg-white/90 text-ink">{t('sample')}</span>}
               </div>
@@ -119,7 +136,7 @@ export default function ProductPage({ id }) {
                 <ul className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
                   {images.map((src, i) => (
                     <li key={src + i} className="shrink-0">
-                      <button type="button" onClick={() => setImg(i)} aria-label={t('photoN')(num(i + 1))} aria-current={i === img ? 'true' : undefined} className={`block overflow-hidden rounded-xl ring-2 ${i === img ? 'ring-ink' : 'ring-transparent hover:ring-line'}`}>
+                      <button type="button" onClick={() => setImg(i)} aria-label={t('photoN')(num(i + 1))} aria-current={i === img ? 'true' : undefined} className={`block overflow-hidden rounded-md ring-2 ${i === img ? 'ring-ink' : 'ring-transparent hover:ring-line'}`}>
                         <img src={src} alt="" loading="lazy" className="aspect-[4/5] w-16 object-cover sm:w-20" />
                       </button>
                     </li>
@@ -129,49 +146,61 @@ export default function ProductPage({ id }) {
             </div>
 
             {/* ---------- buying ---------- */}
-            <div className="md:pt-2">
-              <h1 id="product-title" className="text-2xl font-black leading-tight text-ink sm:text-3xl">{name}</h1>
+            <div className="md:sticky md:top-24">
+              {category && <p className="text-sm text-muted">{pick(category.name)}</p>}
+              <h1 id="product-title" className="display mt-1 text-[1.75rem] leading-tight text-ink-900 sm:text-4xl">{name}</h1>
 
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1" aria-live="polite">
-                <span className={`text-3xl font-black ${onSale ? 'text-brand' : 'text-ink'}`}>
+                <span className={`text-2xl ${onSale ? 'text-brand' : 'text-ink'}`}>
                   {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
                 </span>
-                {onSale && <s className="text-lg font-semibold text-muted">{price(shownOld)}</s>}
-                {onSale && chosen && <span className="rounded-full bg-brand/10 px-3 py-1 text-sm font-black text-brand">{t('youSave')(price(shownOld - shownPrice))}</span>}
+                {onSale && <s className="text-lg text-muted">{price(shownOld)}</s>}
+                {onSale && chosen && <span className="sale-badge">{t('youSave')(price(shownOld - shownPrice))}</span>}
               </div>
 
               <StockLine p={p} chosen={chosen} />
 
+              {/* colours */}
+              {p.colors.length > 0 && (
+                <div className="mt-6">
+                  <p id="color-label" className="mb-2 text-sm text-muted">{t('color')}: <b className="text-ink">{colorName}</b></p>
+                  <Swatches colors={p.colors} value={color} onChange={pickColor} labelId="color-label" />
+                </div>
+              )}
+
               {/* sizes */}
-              <fieldset className="mt-6">
-                <legend className="mb-2 font-black text-ink">{t('chooseSize')}</legend>
+              <fieldset className={p.colors.length ? 'mt-5' : 'mt-6'}>
+                <legend className="mb-2 text-sm text-muted">{t('chooseSize')}{size && <>: <b className="text-ink" dir="ltr">{size}</b></>}</legend>
                 <div className="flex flex-wrap gap-2">
-                  {p.variants.map((v) => (
-                    <button
-                      key={v.id}
-                      type="button"
-                      disabled={v.stock === 0}
-                      aria-pressed={size === v.size}
-                      aria-label={v.stock === 0 ? `${v.size} — ${t('sizeSoldOut')}` : v.size}
-                      onClick={() => { setSize(v.size); setMsg(null) }}
-                      className={`size-chip-lg ${v.stock === 0 ? 'line-through' : ''}`}
-                    >
-                      {v.size}
-                    </button>
-                  ))}
+                  {p.sizes.map((s) => {
+                    const out = !(findVariant(p, s, color)?.stock > 0)
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        disabled={out}
+                        aria-pressed={size === s}
+                        aria-label={out ? `${s} — ${t('sizeSoldOut')}` : s}
+                        onClick={() => { setSize(s); setMsg(null) }}
+                        className="size-chip-lg"
+                      >
+                        {s}
+                      </button>
+                    )
+                  })}
                 </div>
               </fieldset>
 
               {/* quantity */}
               {!sold && (
                 <div className="mt-5 flex flex-wrap items-center gap-3">
-                  <span className="font-black text-ink" id="qty-label">{t('quantity')}</span>
-                  <div className="flex items-center rounded-full ring-1 ring-line" role="group" aria-labelledby="qty-label">
-                    <button type="button" className="grid size-12 place-items-center rounded-full hover:bg-paper disabled:opacity-30" aria-label={t('decrease')} disabled={qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                  <span className="w-full text-sm text-muted" id="qty-label">{t('quantity')}</span>
+                  <div className="flex items-center border border-ink/30" role="group" aria-labelledby="qty-label">
+                    <button type="button" className="grid size-12 place-items-center hover:bg-paper disabled:opacity-30" aria-label={t('decrease')} disabled={qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))}>
                       <MinusIcon className="size-5" />
                     </button>
-                    <span className="w-10 text-center text-lg font-black" aria-live="polite">{num(qty)}</span>
-                    <button type="button" className="grid size-12 place-items-center rounded-full hover:bg-paper disabled:opacity-30" aria-label={t('increase')} disabled={!chosen || qty >= canAdd} onClick={() => setQty((q) => Math.min(canAdd, q + 1))}>
+                    <span className="w-10 text-center text-lg font-bold" aria-live="polite">{num(qty)}</span>
+                    <button type="button" className="grid size-12 place-items-center hover:bg-paper disabled:opacity-30" aria-label={t('increase')} disabled={!chosen || qty >= canAdd} onClick={() => setQty((q) => Math.min(canAdd, q + 1))}>
                       <PlusIcon className="size-5" />
                     </button>
                   </div>
@@ -180,33 +209,45 @@ export default function ProductPage({ id }) {
                 </div>
               )}
 
-              {msg && <p role={msg.kind === 'error' ? 'alert' : 'status'} className={`mt-4 rounded-2xl p-3 text-sm font-bold ${msg.kind === 'error' ? 'bg-brand/10 text-brand' : 'bg-emerald-50 text-emerald-800'}`}>{msg.text}</p>}
+              {msg && <p role={msg.kind === 'error' ? 'alert' : 'status'} className={`mt-4 rounded-md p-3 text-sm font-bold ${msg.kind === 'error' ? 'bg-brand/10 text-brand' : 'bg-emerald-50 text-emerald-800'}`}>{msg.text}</p>}
 
-              <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                <button type="button" onClick={() => add(false)} disabled={sold || (chosen && canAdd === 0)} className="btn btn-red h-14 text-lg">
+              {/* theme-style buttons: add to cart (outlined) above buy now (solid) */}
+              <div className="mt-6 grid gap-2.5">
+                <button type="button" onClick={() => add(false)} disabled={sold || (chosen && canAdd === 0)} className="btn btn-outline h-13 text-lg">
                   <BagIcon className="size-5" />
                   {sold ? t('outStock') : t('addToCart')}
                 </button>
                 {!sold && (
-                  <button type="button" onClick={() => add(true)} disabled={chosen && canAdd === 0} className="btn btn-ink h-14 text-lg">{t('buyNow')}</button>
+                  <button type="button" onClick={() => add(true)} disabled={chosen && canAdd === 0} className="btn btn-ink h-13 text-lg">{t('buyNow')}</button>
                 )}
               </div>
 
-              <a href={waLink(t('askMsg')(name, size))} target="_blank" rel="noopener noreferrer" className="btn mt-3 h-12 w-full border border-[#1fa855] text-[#178f47] hover:bg-[#1fa855]/10">
-                <WhatsAppIcon className="size-5" />
+              <a href={waLink(t('askMsg')(colorName ? `${name} (${colorName})` : name, size))} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 font-semibold text-ink underline-offset-4 hover:underline">
+                <WhatsAppIcon className="size-5 text-[#1fa855]" />
                 {t('askWhatsapp')}
               </a>
 
-              <dl className="mt-6 grid gap-2 rounded-[20px] bg-paper p-4 text-sm">
-                {category && <Row label={t('filterCategory')} value={pick(category.name)} />}
-                <Row label={t('availableSizes')} value={<span dir="ltr">{inStock.map((v) => v.size).join(' · ') || '—'}</span>} />
-              </dl>
+              <div className="mt-7 border-t border-line">
+                <Accordion title={t('detailsTab')} open>
+                  <dl className="grid gap-2">
+                    {category && <Row label={t('filterCategory')} value={pick(category.name)} />}
+                    <Row label={t('availableSizes')} value={<span dir="ltr">{inStock.map((v) => v.size).join(' · ') || '—'}</span>} />
+                  </dl>
+                </Accordion>
+                <Accordion title={t('deliveryReturns')}>
+                  <p>{t('deliveryReturnsText')}</p>
+                  <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                    <a href="#/policy/delivery" className="link-u font-semibold text-ink">{pick(policies.delivery.title)}</a>
+                    <a href="#/policy/returns" className="link-u font-semibold text-ink">{pick(policies.returns.title)}</a>
+                  </p>
+                </Accordion>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {related.length > 0 && <Rail id="related" kicker={category ? pick(category.name) : ''} title={t('related')} products={related} />}
+      {related.length > 0 && <Rail id="related" title={t('related')} products={related} limit={4} />}
       {gallery !== null && <Gallery images={images} name={name} start={gallery} onClose={() => setGallery(null)} />}
     </>
   )
@@ -222,6 +263,18 @@ function StockLine({ p, chosen }) {
       <span className={`inline-block size-2.5 rounded-full ${dot}`} aria-hidden="true" />
       {label}
     </p>
+  )
+}
+
+function Accordion({ title, open = false, children }) {
+  return (
+    <details className="accordion border-b border-line" open={open}>
+      <summary className="flex cursor-pointer items-center justify-between gap-3 py-4 font-semibold text-ink">
+        {title}
+        <PlusIcon className="acc-icon size-5 transition-transform" />
+      </summary>
+      <div className="pb-5 text-sm leading-relaxed text-muted">{children}</div>
+    </details>
   )
 }
 

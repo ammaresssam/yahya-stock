@@ -36,7 +36,7 @@ export default function InventoryTab({ products, refresh, notify }) {
     setSaving(null)
     setDrafts((d) => ({ ...d, [v.id]: undefined }))
     if (error) return notify('تعذر حفظ الكمية', 'error')
-    notify(`تم: ${v.size} ← ${qty} قطعة`)
+    notify(`تم: ${v.color_ar ? v.color_ar + ' ' : ''}${v.size} ← ${qty} قطعة`)
     refresh()
   }
 
@@ -64,7 +64,7 @@ export default function InventoryTab({ products, refresh, notify }) {
                 {img ? <img src={img} alt="" className="size-12 shrink-0 rounded-xl object-cover" /> : <span className="size-12 shrink-0 rounded-xl bg-paper" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold text-ink">{p.name_ar}</p>
-                  <p className="text-sm text-muted">مقاس <b dir="ltr" className="text-ink">{v.size}</b> · {v.price} ج.م{!p.active && ' · مخفي'}</p>
+                  <p className="text-sm text-muted">{v.color_ar && <>اللون <b className="text-ink">{v.color_ar}</b> · </>}مقاس <b dir="ltr" className="text-ink">{v.size}</b> · {v.price} ج.م{!p.active && ' · مخفي'}</p>
                 </div>
                 <div className="flex items-center rounded-full ring-1 ring-line">
                   <button type="button" className="qty-btn" aria-label={`زيادة ${p.name_ar} ${v.size}`} disabled={saving === v.id} onClick={() => saveQty(v, v.stock_qty + 1)}>

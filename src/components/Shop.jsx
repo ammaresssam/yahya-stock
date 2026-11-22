@@ -20,58 +20,64 @@ export default function Shop() {
   const { filters, update, reset } = useCatalog()
   const [sheet, setSheet] = useState(false)
 
+  const { categories } = useData()
+  const { pick } = useLang()
   const list = useMemo(() => applyCatalog(products, filters), [products, filters])
   const active = activeFilterCount(filters)
+  // the page title follows what is being browsed, like a collection page
+  const cat = categories.find((c) => c.id === filters.category)
+  const title = filters.onSale ? t('navOffers') : cat ? pick(cat.name) : t('shopTitle')
 
   return (
-    <section id="shop" className="scroll-mt-32 bg-white py-10 sm:py-12" aria-labelledby="shop-title">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-sm font-black text-brand">{t('shopKicker')}</p>
-            <h2 id="shop-title" className="text-2xl font-black text-ink sm:text-3xl">{t('shopTitle')}</h2>
-          </div>
+    <section id="shop" className="bg-page pb-14" aria-labelledby="shop-title">
+      <div className="border-b border-line py-8 sm:py-10">
+        <div className="page-width">
+          <h1 id="shop-title" className="section-title text-center sm:text-[2.4rem]">{title}</h1>
+        </div>
+      </div>
+      <div className="page-width pt-6">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted" aria-live="polite">{loading ? ' ' : t('results')(num(list.length))}</p>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setSheet(true)} className="btn h-10 border border-line px-4 text-sm hover:border-ink lg:hidden">
+            <button type="button" onClick={() => setSheet(true)} className="btn btn-outline h-10 px-4 text-sm lg:hidden">
               <FilterIcon className="size-4" />
               {t('filters')}
-              {active > 0 && <span className="grid min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] leading-5 text-white">{num(active)}</span>}
+              {active > 0 && <span className="grid min-w-5 place-items-center rounded-full bg-ink-900 px-1 text-[11px] leading-5 text-white">{num(active)}</span>}
             </button>
             <label className="flex items-center gap-2 text-sm font-semibold text-muted">
               <span className="hidden sm:inline">{t('sortLabel')}</span>
-              <select aria-label={t('sortLabel')} value={filters.sort} onChange={(e) => update({ sort: e.target.value })} className="h-10 rounded-full border border-line bg-white px-3 font-bold text-ink focus:border-ink">
+              <select aria-label={t('sortLabel')} value={filters.sort} onChange={(e) => update({ sort: e.target.value })} className="h-10 rounded-md border border-ink/25 bg-white px-3 font-semibold text-ink focus:border-ink">
                 {SORT_KEYS.map(([k, label]) => <option key={k} value={k}>{t(label)}</option>)}
               </select>
             </label>
           </div>
         </div>
 
-        <div className="lg:grid lg:grid-cols-[250px_1fr] lg:gap-8">
+        <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-10">
           <aside className="hidden lg:block" aria-label={t('filterTitle')}>
-            <div className="sticky top-36"><FilterPanel /></div>
+            <div className="sticky top-28"><FilterPanel /></div>
           </aside>
 
           <div>
             <ActiveChips />
-            <p className="mb-3 text-sm font-semibold text-muted" aria-live="polite">{loading ? ' ' : t('results')(num(list.length))}</p>
 
             {loading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3" aria-busy="true">
-                {Array.from({ length: 6 }, (_, i) => <div key={i} className="aspect-[4/6.4] animate-pulse rounded-[20px] bg-paper" />)}
+              <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3" aria-busy="true">
+                {Array.from({ length: 6 }, (_, i) => <div key={i} className="aspect-[4/6.4] animate-pulse rounded-lg bg-paper" />)}
               </div>
             ) : error ? (
-              <div className="rounded-3xl bg-paper p-10 text-center">
+              <div className="rounded-lg bg-paper p-10 text-center">
                 <p className="text-muted">{t('loadError')}</p>
                 <button type="button" onClick={reload} className="btn btn-ink mt-4 h-11 px-6">{t('retry')}</button>
               </div>
             ) : list.length ? (
-              <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+              <ul className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3">
                 {list.map((p) => <li key={p.id} className="flex"><ProductCard product={p} className="w-full" /></li>)}
               </ul>
             ) : (
-              <div className="rounded-3xl bg-paper px-6 py-12 text-center">
+              <div className="rounded-lg bg-paper px-6 py-12 text-center">
                 <SearchIcon className="mx-auto size-10 text-muted" />
-                <p className="mt-3 text-lg font-black text-ink">{t('noResults')}</p>
+                <p className="mt-3 text-lg font-bold text-ink">{t('noResults')}</p>
                 <p className="mt-1 text-muted">{t('noResultsHint')}</p>
                 {active > 0 && <button type="button" onClick={reset} className="btn btn-ink mt-5 h-11 px-6">{t('clearAll')}</button>}
               </div>
@@ -136,7 +142,7 @@ function FilterPanel() {
         {hasSale && <Toggle label={t('filterOnSale')} checked={filters.onSale} onChange={(v) => update({ onSale: v })} />}
       </Group>
 
-      {active > 0 && <button type="button" onClick={reset} className="justify-self-start text-sm font-bold text-brand underline underline-offset-4">{t('clearAll')}</button>}
+      {active > 0 && <button type="button" onClick={reset} className="justify-self-start text-sm font-semibold text-ink underline underline-offset-4">{t('clearAll')}</button>}
     </div>
   )
 }
@@ -157,7 +163,7 @@ function ActiveChips() {
   return (
     <div className="mb-3 flex flex-wrap items-center gap-1.5">
       {chips.map((c) => (
-        <button key={c.key} type="button" onClick={c.clear} className="inline-flex h-8 items-center gap-1 rounded-full bg-ink px-3 text-sm font-bold text-white hover:bg-brand" aria-label={`${t('remove')} ${c.label}`}>
+        <button key={c.key} type="button" onClick={c.clear} className="inline-flex h-8 items-center gap-1 rounded-full border border-ink/25 bg-white px-3 text-sm font-semibold text-ink hover:border-ink" aria-label={`${t('remove')} ${c.label}`}>
           {c.label}
           <CloseIcon className="size-3.5" />
         </button>
@@ -181,14 +187,14 @@ function FilterSheet({ count, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:hidden" role="dialog" aria-modal="true" aria-label={t('filterTitle')}>
       <div className="absolute inset-0 bg-ink/60" onClick={onClose} />
-      <div className="relative flex max-h-[88dvh] w-full flex-col rounded-t-[28px] bg-white">
+      <div className="relative flex max-h-[88dvh] w-full flex-col rounded-t-xl bg-white">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h3 className="text-xl font-black text-ink">{t('filterTitle')}</h3>
+          <h3 className="text-xl font-bold text-ink">{t('filterTitle')}</h3>
           <button type="button" onClick={onClose} aria-label={t('closeMenu')} className="grid size-10 place-items-center rounded-full hover:bg-paper"><CloseIcon className="size-6" /></button>
         </div>
         <div className="overflow-y-auto px-5 py-5"><FilterPanel /></div>
         <div className="border-t border-line p-4">
-          <button type="button" onClick={onClose} className="btn btn-red h-12 w-full text-lg">{t('showResults')(num(count))}</button>
+          <button type="button" onClick={onClose} className="btn btn-ink h-12 w-full text-lg">{t('showResults')(num(count))}</button>
         </div>
       </div>
     </div>
@@ -198,7 +204,7 @@ function FilterSheet({ count, onClose }) {
 function Group({ title, children }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-sm font-black text-ink">{title}</legend>
+      <legend className="mb-3 w-full border-b border-line pb-2 text-base font-bold text-ink">{title}</legend>
       {children}
     </fieldset>
   )

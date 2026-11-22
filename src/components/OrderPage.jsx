@@ -54,9 +54,9 @@ export default function OrderPage({ token }) {
   const date = (iso) => new Date(iso).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' })
 
   return (
-    <section className="bg-white py-10 sm:py-14" aria-labelledby="order-title">
+    <section className="bg-page py-10 sm:py-14" aria-labelledby="order-title">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <a href="#shop" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('backToShop')}</a>
+        <a href="#/shop" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('backToShop')}</a>
 
         {order === undefined && !failed && <p className="py-20 text-center text-muted" aria-busy="true">{t('orderLoading')}</p>}
         {failed && (
@@ -66,8 +66,8 @@ export default function OrderPage({ token }) {
           </div>
         )}
         {order === null && (
-          <div className="mt-6 rounded-3xl bg-paper p-8 text-center">
-            <h1 id="order-title" className="text-2xl font-black text-ink">{t('orderTitle')}</h1>
+          <div className="mt-6 rounded-lg bg-paper p-8 text-center">
+            <h1 id="order-title" className="text-2xl font-bold text-ink">{t('orderTitle')}</h1>
             <p className="mt-2 text-muted">{t('orderNotFound')}</p>
             <a href={waLink()} target="_blank" rel="noopener noreferrer" className="btn mt-4 h-11 bg-[#1fa855] px-5 text-white"><WhatsAppIcon className="size-5" />{t('whatsapp')}</a>
           </div>
@@ -75,17 +75,17 @@ export default function OrderPage({ token }) {
 
         {order && (
           <>
-            <h1 id="order-title" className="mt-3 text-3xl font-black text-ink sm:text-4xl">{t('orderThanks')(order.customer_first_name)}</h1>
+            <h1 id="order-title" className="mt-3 text-3xl font-bold text-ink sm:text-4xl">{t('orderThanks')(order.customer_first_name)}</h1>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <Box label={t('orderNumber')}><span dir="ltr" className="text-2xl font-black">{order.order_number}</span></Box>
+              <Box label={t('orderNumber')}><span dir="ltr" className="text-2xl font-bold">{order.order_number}</span></Box>
               <Box label={t('orderStatus')}>
-                <span className={`text-xl font-black ${['cancelled', 'payment_failed'].includes(order.status) ? 'text-brand' : 'text-white'}`}>{t('status')[order.status]}</span>
+                <span className={`text-xl font-bold ${['cancelled', 'payment_failed'].includes(order.status) ? 'text-brand' : 'text-white'}`}>{t('status')[order.status]}</span>
               </Box>
             </div>
 
             {order.status === 'pending_payment' && (
-              <div className="mt-6 rounded-[24px] bg-amber-50 p-5 text-amber-950" role="status">
-                <p className="flex items-center gap-2 font-black">
+              <div className="mt-6 rounded-lg bg-amber-50 p-5 text-amber-950" role="status">
+                <p className="flex items-center gap-2 font-bold">
                   <span className="inline-block size-3 animate-pulse rounded-full bg-amber-500" aria-hidden="true" />
                   {t('payWaiting')}
                 </p>
@@ -100,19 +100,19 @@ export default function OrderPage({ token }) {
               </div>
             )}
             {order.status === 'payment_failed' && (
-              <div className="mt-6 rounded-[24px] bg-paper p-5">
-                <p className="font-black text-ink">{t('payFailedTitle')}</p>
+              <div className="mt-6 rounded-lg bg-paper p-5">
+                <p className="font-bold text-ink">{t('payFailedTitle')}</p>
                 <p className="mt-1 text-sm text-muted">{t('payFailedText')}</p>
-                <a href="#shop" className="btn btn-ink mt-4 h-11 px-6">{t('backToShop')}</a>
+                <a href="#/shop" className="btn btn-ink mt-4 h-11 px-6">{t('backToShop')}</a>
               </div>
             )}
             {order.payment_method === 'card' && order.payment_status === 'paid' && !['cancelled', 'payment_failed'].includes(order.status) && (
-              <p className="mt-4 rounded-2xl bg-emerald-50 p-3 font-bold text-emerald-800">{t('payPaid')}</p>
+              <p className="mt-4 rounded-md bg-emerald-50 p-3 font-bold text-emerald-800">{t('payPaid')}</p>
             )}
 
             {!['cancelled', 'payment_failed', 'pending_payment'].includes(order.status) && <Timeline current={order.status} history={order.history} date={date} />}
 
-            <div className="mt-6 rounded-[24px] bg-paper p-5">
+            <div className="mt-6 rounded-lg bg-paper p-5">
               <p className="font-bold text-ink">{t('orderSaveLink')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" onClick={copy} className="btn btn-ink h-11 px-5">{copied ? t('copied') : t('copyLink')}</button>
@@ -120,13 +120,13 @@ export default function OrderPage({ token }) {
               </div>
             </div>
 
-            <div className="mt-6 rounded-[24px] ring-1 ring-line">
+            <div className="mt-6 rounded-lg ring-1 ring-line">
               <ul className="divide-y divide-line px-5">
                 {order.items.map((i, k) => (
                   <li key={k} className="flex justify-between gap-3 py-3">
                     <span>
                       <span className="block font-bold text-ink">{pick({ ar: i.name_ar, en: i.name_en || i.name_ar })}</span>
-                      <span className="text-sm text-muted">{t('size')} <span dir="ltr">{i.size}</span> × {num(i.qty)}</span>
+                      <span className="text-sm text-muted">{i.color_ar && <>{pick({ ar: i.color_ar, en: i.color_en || i.color_ar })} · </>}{t('size')} <span dir="ltr">{i.size}</span> × {num(i.qty)}</span>
                     </span>
                     <span className="font-bold">{price(i.line_total)}</span>
                   </li>
@@ -135,7 +135,7 @@ export default function OrderPage({ token }) {
               <dl className="grid gap-1.5 border-t border-line p-5 text-sm">
                 <Row label={t('itemsTotal')} value={price(order.subtotal)} />
                 <Row label={t('shippingFee')} value={price(order.shipping_fee)} />
-                <Row label={t('grandTotal')} value={<span className="text-lg font-black">{price(order.total)}</span>} />
+                <Row label={t('grandTotal')} value={<span className="text-lg font-bold">{price(order.total)}</span>} />
                 <Row label={t('payment')} value={`${t('payMethodName')[order.payment_method]} · ${t('payStatus')[order.payment_status]}`} />
                 <Row label={t('deliverTo')} value={`${order.area}${lang === 'ar' ? '،' : ','} ${pick(order.zone)} · ${order.phone_masked}`} />
               </dl>
@@ -157,14 +157,14 @@ function Timeline({ current, history, date }) {
   const at = Object.fromEntries((history ?? []).map((h) => [h.status, h.at]))
   const reached = STEPS.indexOf(current)
   return (
-    <ol className="mt-6 grid gap-0 rounded-[24px] ring-1 ring-line p-5">
+    <ol className="mt-6 grid gap-0 rounded-lg ring-1 ring-line p-5">
       {STEPS.map((s, i) => {
         const done = i <= reached
         return (
           <li key={s} className="flex gap-3">
             <span className="flex flex-col items-center">
-              <span className={`grid size-7 place-items-center rounded-full text-xs font-black ${done ? 'bg-brand text-white' : 'bg-paper text-muted'}`} aria-hidden="true">{done ? '✓' : i + 1}</span>
-              {i < STEPS.length - 1 && <span className={`w-0.5 flex-1 ${i < reached ? 'bg-brand' : 'bg-line'}`} style={{ minHeight: 18 }} />}
+              <span className={`grid size-7 place-items-center rounded-full text-xs font-bold ${done ? 'bg-ink-900 text-white' : 'bg-paper text-muted'}`} aria-hidden="true">{done ? '✓' : i + 1}</span>
+              {i < STEPS.length - 1 && <span className={`w-0.5 flex-1 ${i < reached ? 'bg-ink-900' : 'bg-line'}`} style={{ minHeight: 18 }} />}
             </span>
             <span className="pb-4">
               <span className={`block font-bold ${done ? 'text-ink' : 'text-muted'}`}>{t('status')[s]}</span>
@@ -179,7 +179,7 @@ function Timeline({ current, history, date }) {
 
 function Box({ label, children }) {
   return (
-    <div className="rounded-[24px] bg-ink p-5 text-white">
+    <div className="rounded-lg bg-ink p-5 text-white">
       <p className="text-sm text-white/60">{label}</p>
       <div className="mt-1">{children}</div>
     </div>

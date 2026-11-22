@@ -21,7 +21,8 @@ const SERVER_ERRORS = {
   unknown_category: 'القسم غير موجود — حدّث الصفحة',
   variants_required: 'أضف مقاس واحد على الأقل',
   size_required: 'في مقاس من غير اسم',
-  duplicate_size: 'في مقاس مكرر',
+  duplicate_size: 'في مقاس مكرر في نفس اللون',
+  color_name_required: 'في لون من غير اسم بالعربي',
   too_many_images: `أقصى عدد صور ${MAX_IMAGES}`,
   not_authorized: 'الحساب ده مش مسموح له يعدّل',
   product_not_found: 'المنتج اتحذف — حدّث الصفحة',
@@ -46,11 +47,27 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
     art_color: product?.art_color ?? '#2b2a2f',
     art_bg: product?.art_bg ?? '#e9e7e3',
   }))
-  const [variants, setVariants] = useState(() =>
-    [...(product?.product_variants ?? [])]
-      .sort((a, b) => a.position - b.position)
-      .map((v) => ({ key: key(), id: v.id, size: v.size, price: String(v.price), compare_at_price: v.compare_at_price ? String(v.compare_at_price) : '', stock_qty: String(v.stock_qty) })),
-  )
+  // Colours: each group has a name (Arabic required, English optional) and a swatch.
+  // When there are no colour groups, sizes work exactly as before.
+  const initial = useMemo(() => {
+    const rows = [...(product?.product_variants ?? [])].sort((a, b) => a.position - b.position)
+    const groups = []
+    for (const v of rows) {
+      if (v.color_ar && !groups.some((g) => g.ar === v.color_ar)) groups.push({ cid: key(), ar: v.color_ar, en: v.color_en ?? '', hex: v.color_hex || '#888888' })
+    }
+    const variants = rows.map((v) => ({
+      key: key(),
+      id: v.id,
+      cid: v.color_ar ? groups.find((g) => g.ar === v.color_ar).cid : null,
+      size: v.size,
+      price: String(v.price),
+      compare_at_price: v.compare_at_price ? String(v.compare_at_price) : '',
+      stock_qty: String(v.stock_qty),
+    }))
+    return { groups, variants }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const [colors, setColors] = useState(initial.groups)
+  const [variants, setVariants] = useState(initial.variants)
   const [images, setImages] = useState(() =>
     [...(product?.product_images ?? [])].sort((a, b) => a.position - b.position).map((i) => ({ key: key(), url: i.url, storage_path: i.storage_path })),
   )
@@ -60,12 +77,32 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
 
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }))
   const setVariant = (k, field, value) => setVariants((vs) => vs.map((v) => (v.key === k ? { ...v, [field]: value } : v)))
-  const sizesLower = useMemo(() => variants.map((v) => v.size.trim().toLowerCase()), [variants])
+  const sizesIn = (cid) => variants.filter((v) => v.cid === cid).map((v) => v.size.trim().toLowerCase())
 
-  const addSize = (size = '') => {
-    if (size && sizesLower.includes(size.toLowerCase())) return
+  const addSize = (size = '', cid = null) => {
+    if (size && sizesIn(cid).includes(size.toLowerCase())) return
     const last = variants[variants.length - 1]
-    setVariants((vs) => [...vs, { key: key(), size, price: last?.price ?? '', compare_at_price: last?.compare_at_price ?? '', stock_qty: '' }])
+    setVariants((vs) => [...vs, { key: key(), cid, size, price: last?.price ?? '', compare_at_price: last?.compare_at_price ?? '', stock_qty: '' }])
+  }
+
+  const setColor = (cid, field, value) => setColors((cs) => cs.map((c) => (c.cid === cid ? { ...c, [field]: value } : c)))
+  // a new colour starts with the same sizes and prices as the first colour (quantities empty)
+  const addColor = () => {
+    const cid = key()
+    if (!colors.length) {
+      setColors([{ cid, ar: '', en: '', hex: '#888888' }])
+      setVariants((vs) => vs.map((v) => ({ ...v, cid })))
+      return
+    }
+    const first = variants.filter((v) => v.cid === colors[0].cid)
+    setColors((cs) => [...cs, { cid, ar: '', en: '', hex: '#888888' }])
+    setVariants((vs) => [...vs, ...first.map((v) => ({ key: key(), cid, size: v.size, price: v.price, compare_at_price: v.compare_at_price, stock_qty: '' }))])
+  }
+  const removeColor = (cid) => {
+    const rest = colors.filter((c) => c.cid !== cid)
+    setColors(rest)
+    // removing the last colour keeps its sizes as plain sizes
+    setVariants((vs) => (rest.length ? vs.filter((v) => v.cid !== cid) : vs.map((v) => ({ ...v, cid: null }))))
   }
 
   const addFiles = (files) => {
@@ -87,12 +124,21 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
     if (!f.name_ar.trim()) return 'اكتب اسم المنتج بالعربي'
     if (!f.category) return 'اختار القسم (أضف قسماً من تبويب الأقسام أولاً)'
     if (!variants.length) return 'أضف مقاس واحد على الأقل (أو Free Size)'
+    const names = new Set()
+    for (const c of colors) {
+      const n = c.ar.trim()
+      if (!n) return 'اكتب اسم كل لون بالعربي'
+      if (names.has(n)) return `اللون ${n} مكرر`
+      names.add(n)
+      if (!variants.some((v) => v.cid === c.cid)) return `أضف مقاس واحد على الأقل للون ${n}`
+    }
     const seen = new Set()
     for (const v of variants) {
       const size = v.size.trim()
       if (!size) return 'في مقاس من غير اسم'
-      if (seen.has(size.toLowerCase())) return `المقاس ${size} مكرر`
-      seen.add(size.toLowerCase())
+      const k = `${v.cid}|${size.toLowerCase()}`
+      if (seen.has(k)) return `المقاس ${size} مكرر${v.cid ? ' في نفس اللون' : ''}`
+      seen.add(k)
       const price = toNumber(v.price)
       const old = toNumber(v.compare_at_price)
       if (!price) return `اكتب سعر المقاس ${size}`
@@ -132,13 +178,19 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
         ...f,
         name_ar: f.name_ar.trim(),
         name_en: f.name_en.trim(),
-        variants: variants.map((v) => ({
+        variants: variants.map((v) => {
+          const c = colors.find((x) => x.cid === v.cid)
+          return {
           id: v.id,
           size: v.size.trim(),
+          color_ar: c ? c.ar.trim() : '',
+          color_en: c ? c.en.trim() : '',
+          color_hex: c ? c.hex : null,
           price: toNumber(v.price),
           compare_at_price: toNumber(v.compare_at_price),
           stock_qty: toNumber(v.stock_qty),
-        })),
+          }
+        }),
         images: finalImages,
       }
       const { error: rpcError } = await supabase.rpc('admin_save_product', { payload })
@@ -227,17 +279,9 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
           </div>
         </section>
 
-        {/* ---------- sizes ---------- */}
+        {/* ---------- sizes (and colours) ---------- */}
         <section>
-          <p className="field-label">المقاسات والأسعار والكميات *</p>
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {QUICK_SIZES.map((s) => (
-              <button key={s} type="button" className="size-chip" aria-pressed={sizesLower.includes(s.toLowerCase())} onClick={() => addSize(s)}>
-                + {s}
-              </button>
-            ))}
-            <button type="button" className="size-chip" onClick={() => addSize('')}>+ مقاس آخر</button>
-          </div>
+          <p className="field-label">المقاسات والألوان والأسعار والكميات *</p>
 
           {variants.length > 1 && (
             <div className="mb-3 flex items-end gap-2 rounded-2xl bg-paper p-3">
@@ -251,23 +295,33 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
             </div>
           )}
 
-          {variants.length === 0 ? (
-            <p className="rounded-2xl bg-paper p-4 text-center text-sm text-muted">اختار مقاس من فوق</p>
+          {colors.length === 0 ? (
+            <SizeGroup cid={null} variants={variants} sizesIn={sizesIn} addSize={addSize} setVariant={setVariant} setVariants={setVariants} />
           ) : (
-            <ul className="grid gap-2">
-              {variants.map((v) => (
-                <li key={v.key} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
-                  <Field label="المقاس" id={`s-${v.key}`} dir="ltr" value={v.size} onChange={(x) => setVariant(v.key, 'size', x)} />
-                  <Field label="السعر (ج.م)" id={`pr-${v.key}`} numeric value={v.price} onChange={(x) => setVariant(v.key, 'price', x)} />
-                  <button type="button" onClick={() => setVariants((vs) => vs.filter((y) => y.key !== v.key))} aria-label={`حذف المقاس ${v.size}`} className="row-span-2 grid size-10 place-items-center self-center rounded-full text-muted hover:bg-paper hover:text-brand sm:row-span-1 sm:col-start-5">
-                    <TrashIcon className="size-5" />
-                  </button>
-                  <Field label="قبل الخصم" id={`cp-${v.key}`} numeric placeholder="اختياري" value={v.compare_at_price} onChange={(x) => setVariant(v.key, 'compare_at_price', x)} />
-                  <Field label="الكمية" id={`q-${v.key}`} numeric value={v.stock_qty} onChange={(x) => setVariant(v.key, 'stock_qty', x)} />
+            <ul className="grid gap-4">
+              {colors.map((c, i) => (
+                <li key={c.cid} className="rounded-2xl border border-line p-3">
+                  <div className="mb-3 grid grid-cols-[auto_1fr_1fr_auto] items-end gap-2">
+                    <div>
+                      <label htmlFor={`hex-${c.cid}`} className="mb-1 block text-xs font-bold text-muted">اللون</label>
+                      <input id={`hex-${c.cid}`} type="color" value={c.hex} onChange={(e) => setColor(c.cid, 'hex', e.target.value)} className="h-10 w-12 cursor-pointer rounded-md border border-line bg-white p-1" />
+                    </div>
+                    <Field label={`اسم اللون ${i + 1} (عربي) *`} id={`car-${c.cid}`} placeholder="أحمر" value={c.ar} onChange={(x) => setColor(c.cid, 'ar', x)} />
+                    <Field label="English" id={`cen-${c.cid}`} dir="ltr" placeholder="Red" value={c.en} onChange={(x) => setColor(c.cid, 'en', x)} />
+                    <button type="button" onClick={() => removeColor(c.cid)} aria-label={`حذف اللون ${c.ar}`} className="grid size-10 place-items-center rounded-full text-muted hover:bg-paper hover:text-brand">
+                      <TrashIcon className="size-5" />
+                    </button>
+                  </div>
+                  <SizeGroup cid={c.cid} variants={variants} sizesIn={sizesIn} addSize={addSize} setVariant={setVariant} setVariants={setVariants} />
                 </li>
               ))}
             </ul>
           )}
+
+          <button type="button" onClick={addColor} className="btn mt-3 h-10 border border-dashed border-ink/40 px-4 text-sm hover:border-ink">
+            <PlusIcon className="size-4" />
+            {colors.length ? 'لون جديد (بنفس المقاسات)' : 'أضف ألوان للمنتج (أحمر، أزرق…)'}
+          </button>
         </section>
 
         <section className="grid gap-2 sm:grid-cols-3">
@@ -284,6 +338,41 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
         </div>
       </form>
     </Modal>
+  )
+}
+
+// The size rows of one colour (or of the whole product when it has no colours).
+function SizeGroup({ cid, variants, sizesIn, addSize, setVariant, setVariants }) {
+  const rows = variants.filter((v) => v.cid === cid)
+  const have = sizesIn(cid)
+  return (
+    <>
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {QUICK_SIZES.map((s) => (
+          <button key={s} type="button" className="size-chip" aria-pressed={have.includes(s.toLowerCase())} onClick={() => addSize(s, cid)}>
+            + {s}
+          </button>
+        ))}
+        <button type="button" className="size-chip" onClick={() => addSize('', cid)}>+ مقاس آخر</button>
+      </div>
+      {rows.length === 0 ? (
+        <p className="rounded-2xl bg-paper p-4 text-center text-sm text-muted">اختار مقاس من فوق</p>
+      ) : (
+        <ul className="grid gap-2">
+          {rows.map((v) => (
+            <li key={v.key} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+              <Field label="المقاس" id={`s-${v.key}`} dir="ltr" value={v.size} onChange={(x) => setVariant(v.key, 'size', x)} />
+              <Field label="السعر (ج.م)" id={`pr-${v.key}`} numeric value={v.price} onChange={(x) => setVariant(v.key, 'price', x)} />
+              <button type="button" onClick={() => setVariants((vs) => vs.filter((y) => y.key !== v.key))} aria-label={`حذف المقاس ${v.size}`} className="row-span-2 grid size-10 place-items-center self-center rounded-full text-muted hover:bg-paper hover:text-brand sm:row-span-1 sm:col-start-5">
+                <TrashIcon className="size-5" />
+              </button>
+              <Field label="قبل الخصم" id={`cp-${v.key}`} numeric placeholder="اختياري" value={v.compare_at_price} onChange={(x) => setVariant(v.key, 'compare_at_price', x)} />
+              <Field label="الكمية" id={`q-${v.key}`} numeric value={v.stock_qty} onChange={(x) => setVariant(v.key, 'stock_qty', x)} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   )
 }
 

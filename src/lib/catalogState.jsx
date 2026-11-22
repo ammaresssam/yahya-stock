@@ -7,10 +7,11 @@ const CatalogContext = createContext(null)
 export function CatalogProvider({ children }) {
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
 
-  // Go to the catalogue (from any page) and scroll it into view.
+  // Go to the shop page (from any page); if already there, back to its top.
   const showCatalog = useCallback(() => {
-    if (window.location.hash !== '#shop') window.location.hash = '#shop'
-    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth', block: 'start' })))
+    const h = window.location.hash
+    if (h === '#/shop' || h === '#shop') window.scrollTo({ top: 0, behavior: 'smooth' })
+    else window.location.hash = '#/shop'
   }, [])
 
   const value = useMemo(

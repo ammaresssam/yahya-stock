@@ -58,7 +58,7 @@ export default function Gallery({ images, name, start = 0, onClose }) {
       <div ref={track} onScroll={onScroll} className="no-scrollbar flex flex-1 snap-x snap-mandatory overflow-x-auto">
         {images.map((src, i) => (
           <div key={src + i} className="grid w-full shrink-0 snap-center place-items-center p-4">
-            <img src={src} alt={`${name} — ${t('photoOf')(num(i + 1), num(images.length))}`} className="max-h-full max-w-full rounded-2xl object-contain" />
+            <img src={src} alt={`${name} — ${t('photoOf')(num(i + 1), num(images.length))}`} className="max-h-full max-w-full rounded-md object-contain" />
           </div>
         ))}
       </div>
@@ -69,7 +69,7 @@ export default function Gallery({ images, name, start = 0, onClose }) {
             <ArrowIcon className="size-5 -scale-x-100 rtl:scale-x-100" />
           </button>
           <div className="flex gap-1.5" aria-hidden="true">
-            {images.map((_, i) => <span key={i} className={`h-2 rounded-full transition-all ${i === index ? 'w-6 bg-brand' : 'w-2 bg-white/40'}`} />)}
+            {images.map((_, i) => <span key={i} className={`h-2 rounded-full transition-all ${i === index ? 'w-6 bg-white' : 'w-2 bg-white/40'}`} />)}
           </div>
           <button type="button" onClick={() => go(index + 1)} aria-label={t('nextPhoto')} className="grid size-11 place-items-center rounded-full bg-white/10 hover:bg-white/20">
             <ArrowIcon className="size-5 rtl:-scale-x-100" />

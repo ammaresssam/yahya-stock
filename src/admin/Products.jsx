@@ -111,6 +111,7 @@ export default function ProductsTab({ products, categories, refresh, notify }) {
                   <p className="mt-1 flex flex-wrap gap-1" dir="ltr">
                     {variants.map((v) => (
                       <span key={v.id} className={`rounded-md px-1.5 text-xs font-bold ${v.stock_qty === 0 ? 'bg-paper text-muted line-through' : 'bg-paper text-ink'}`}>
+                        {v.color_hex && <span className="me-1 inline-block size-2.5 rounded-full align-middle ring-1 ring-black/10" style={{ background: v.color_hex }} title={v.color_ar} />}
                         {v.size}·{v.stock_qty}
                       </span>
                     ))}
