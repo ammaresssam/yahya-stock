@@ -100,7 +100,7 @@ const strings = {
     switchLangLabel: 'Switch to English',
 
     heroKicker: 'ميامي – الإسكندرية',
-    // عناوين الهيرو — تتبدل تلقائياً. كل عنوان = سطرين [أبيض، أحمر]. زوّد أو امسح براحتك.
+    // عنوان البانر الكبير في الرئيسية = أول عنوان هنا (الكلمتين ورا بعض). The home banner uses the first title.
     heroTitles: [
       ['البس براندات', 'بسعر الاستوك'],
       ['تشكيلة جديدة', 'كل أسبوع'],
@@ -112,6 +112,25 @@ const strings = {
     heroText: 'تشكيلة ملابس استوك رجالي وحريمي بأسعار مناسبة. تصفح المنتجات، اختار مقاسك، واطلب مباشرة على واتساب أو زورنا في المحل.',
     heroCta: 'تصفح المنتجات',
     heroCta2: 'زور المحل',
+    // Shopify-style sections
+    announceStore: 'محل في ميامي – الإسكندرية',
+    prevMessage: 'الرسالة السابقة',
+    nextMessage: 'الرسالة التالية',
+    aboutTitle: 'محل استوك حقيقي في ميامي',
+    aboutText: 'يحيى استوك محل ملابس استوك في ميامي، الإسكندرية. بنجيب ملابس رجالي وحريمي وأطفال بأسعار مناسبة. تقدر تيجي تشوف وتقيس بنفسك، أو تطلب من الموقع.',
+    aboutCta: 'العنوان والتواصل',
+    detailsTab: 'تفاصيل المنتج',
+    deliveryReturns: 'التوصيل والاستبدال',
+    deliveryReturnsText: 'اقرأ سياسة التوصيل وسياسة الاستبدال قبل ما تطلب. ولو عندك سؤال كلمنا على واتساب.',
+    paymentMethods: 'طرق الدفع',
+    payCash: 'الدفع عند الاستلام',
+    payCard: 'بطاقة بنكية',
+    payWhatsapp: 'الطلب على واتساب',
+    language: 'اللغة',
+    searchClose: 'إغلاق البحث',
+    productsCount: (n) => `${n} منتج`,
+    quickAdd: 'أضف للسلة',
+    chooseOptions: 'اختار المقاس',
 
     marquee: ['ملابس استوك', 'أسعار مناسبة', 'رجالي', 'حريمي', 'ميامي – الإسكندرية', 'اطلب على واتساب'],
 
@@ -394,7 +413,7 @@ const strings = {
     switchLangLabel: 'التبديل إلى العربية',
 
     heroKicker: 'Miami – Alexandria',
-    // Hero headlines rotate automatically. Each = two lines [white, red].
+    // The home banner uses the first headline below (both parts on one line).
     heroTitles: [
       ['Wear brands', 'at stock prices'],
       ['Fresh pieces', 'every week'],
@@ -406,6 +425,25 @@ const strings = {
     heroText: 'Men’s and women’s stock clothing at affordable prices. Browse, pick your size, and order straight on WhatsApp — or visit the store.',
     heroCta: 'Browse products',
     heroCta2: 'Visit the store',
+    // Shopify-style sections
+    announceStore: 'Visit our store in Miami, Alexandria',
+    prevMessage: 'Previous message',
+    nextMessage: 'Next message',
+    aboutTitle: 'A real stock store in Miami',
+    aboutText: 'Yahya Stock is a stock clothing store in Miami, Alexandria. We bring men’s, women’s and kids’ clothes at affordable prices. Come see and try things on, or order from the website.',
+    aboutCta: 'Address and contact',
+    detailsTab: 'Product details',
+    deliveryReturns: 'Delivery and exchanges',
+    deliveryReturnsText: 'Read the delivery and exchange policies before you order. Questions? Message us on WhatsApp.',
+    paymentMethods: 'Payment methods',
+    payCash: 'Cash on delivery',
+    payCard: 'Bank card',
+    payWhatsapp: 'Order on WhatsApp',
+    language: 'Language',
+    searchClose: 'Close search',
+    productsCount: (n) => `${n} products`,
+    quickAdd: 'Add to cart',
+    chooseOptions: 'Choose a size',
 
     marquee: ['Stock clothing', 'Affordable prices', 'Men', 'Women', 'Miami – Alexandria', 'Order on WhatsApp'],
 

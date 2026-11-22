@@ -10,6 +10,7 @@ import GarmentArt from './GarmentArt'
 import Gallery from './Gallery'
 import Rail from './Rail'
 import { BagIcon, MinusIcon, PlusIcon, WhatsAppIcon } from './Icons'
+import { policies } from '../data/policies'
 
 export default function ProductPage({ id }) {
   const { t, pick, price, num, dir } = useLang()
@@ -51,10 +52,10 @@ export default function ProductPage({ id }) {
   if (!p) {
     return (
       <section className="mx-auto max-w-3xl px-4 py-16 text-center">
-        {loading ? <div className="mx-auto aspect-[4/5] max-w-sm animate-pulse rounded-[28px] bg-paper" /> : (
+        {loading ? <div className="mx-auto aspect-[4/5] max-w-sm animate-pulse rounded-lg bg-paper" /> : (
           <>
             <p className="text-lg font-bold text-ink">{t('productNotFound')}</p>
-            <a href="#shop" className="btn btn-ink mt-5 h-11 px-6">{t('backToShop')}</a>
+            <a href="#/shop" className="btn btn-ink mt-5 h-11 px-6">{t('backToShop')}</a>
           </>
         )}
       </section>
@@ -84,12 +85,12 @@ export default function ProductPage({ id }) {
 
   return (
     <>
-      <section className="bg-white py-6 sm:py-10" aria-labelledby="product-title">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="bg-white pb-12 pt-5 sm:pb-16 sm:pt-8" aria-labelledby="product-title">
+        <div className="page-width">
           <nav aria-label="breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-muted">
             <a href="#home" className="hover:text-ink">{t('home')}</a>
             <span aria-hidden="true">{dir === 'rtl' ? '‹' : '›'}</span>
-            <a href="#shop" className="hover:text-ink">{t('shop')}</a>
+            <a href="#/shop" className="hover:text-ink">{t('shop')}</a>
             {category && (
               <>
                 <span aria-hidden="true">{dir === 'rtl' ? '‹' : '›'}</span>
@@ -98,10 +99,10 @@ export default function ProductPage({ id }) {
             )}
           </nav>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:gap-12">
+          <div className="grid items-start gap-7 md:grid-cols-[1.2fr_1fr] lg:gap-14">
             {/* ---------- photos ---------- */}
             <div>
-              <div className="relative overflow-hidden rounded-[24px] bg-paper">
+              <div className="relative overflow-hidden rounded-lg bg-paper">
                 {images.length ? (
                   <button type="button" onClick={() => setGallery(img)} className="block w-full" aria-label={t('viewPhotos')(num(images.length))}>
                     <img src={images[img]} alt={`${name} — ${t('photoN')(num(img + 1))}`} className="aspect-[4/5] w-full object-cover" fetchPriority="high" />
@@ -110,8 +111,8 @@ export default function ProductPage({ id }) {
                   <GarmentArt {...p.art} label={`${name} — ${t('illustration')}`} className="aspect-[4/5] p-12" />
                 )}
                 <div className="pointer-events-none absolute start-3 top-3 flex flex-col items-start gap-1.5">
-                  {pct > 0 && !sold && <span className="sale-badge text-base">{t('off')(num(pct))}</span>}
-                  {p.isNew && <span className="badge bg-ink text-white">{t('newBadge')}</span>}
+                  {pct > 0 && !sold && <span className="sale-badge text-sm">{t('off')(num(pct))}</span>}
+                  {p.isNew && <span className="badge bg-white text-ink ring-1 ring-ink/10">{t('newBadge')}</span>}
                 </div>
                 {!live && <span className="badge absolute end-3 top-3 bg-white/90 text-ink">{t('sample')}</span>}
               </div>
@@ -119,7 +120,7 @@ export default function ProductPage({ id }) {
                 <ul className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
                   {images.map((src, i) => (
                     <li key={src + i} className="shrink-0">
-                      <button type="button" onClick={() => setImg(i)} aria-label={t('photoN')(num(i + 1))} aria-current={i === img ? 'true' : undefined} className={`block overflow-hidden rounded-xl ring-2 ${i === img ? 'ring-ink' : 'ring-transparent hover:ring-line'}`}>
+                      <button type="button" onClick={() => setImg(i)} aria-label={t('photoN')(num(i + 1))} aria-current={i === img ? 'true' : undefined} className={`block overflow-hidden rounded-md ring-2 ${i === img ? 'ring-ink' : 'ring-transparent hover:ring-line'}`}>
                         <img src={src} alt="" loading="lazy" className="aspect-[4/5] w-16 object-cover sm:w-20" />
                       </button>
                     </li>
@@ -129,22 +130,23 @@ export default function ProductPage({ id }) {
             </div>
 
             {/* ---------- buying ---------- */}
-            <div className="md:pt-2">
-              <h1 id="product-title" className="text-2xl font-black leading-tight text-ink sm:text-3xl">{name}</h1>
+            <div className="md:sticky md:top-24">
+              {category && <p className="text-sm text-muted">{pick(category.name)}</p>}
+              <h1 id="product-title" className="mt-1 text-[1.75rem] font-bold leading-tight text-ink sm:text-4xl">{name}</h1>
 
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1" aria-live="polite">
-                <span className={`text-3xl font-black ${onSale ? 'text-brand' : 'text-ink'}`}>
+                <span className={`text-2xl font-bold ${onSale ? 'text-brand' : 'text-ink'}`}>
                   {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
                 </span>
-                {onSale && <s className="text-lg font-semibold text-muted">{price(shownOld)}</s>}
-                {onSale && chosen && <span className="rounded-full bg-brand/10 px-3 py-1 text-sm font-black text-brand">{t('youSave')(price(shownOld - shownPrice))}</span>}
+                {onSale && <s className="text-lg text-muted">{price(shownOld)}</s>}
+                {onSale && chosen && <span className="sale-badge">{t('youSave')(price(shownOld - shownPrice))}</span>}
               </div>
 
               <StockLine p={p} chosen={chosen} />
 
               {/* sizes */}
               <fieldset className="mt-6">
-                <legend className="mb-2 font-black text-ink">{t('chooseSize')}</legend>
+                <legend className="mb-2 text-sm text-muted">{t('chooseSize')}{size && <>: <b className="text-ink" dir="ltr">{size}</b></>}</legend>
                 <div className="flex flex-wrap gap-2">
                   {p.variants.map((v) => (
                     <button
@@ -165,13 +167,13 @@ export default function ProductPage({ id }) {
               {/* quantity */}
               {!sold && (
                 <div className="mt-5 flex flex-wrap items-center gap-3">
-                  <span className="font-black text-ink" id="qty-label">{t('quantity')}</span>
-                  <div className="flex items-center rounded-full ring-1 ring-line" role="group" aria-labelledby="qty-label">
-                    <button type="button" className="grid size-12 place-items-center rounded-full hover:bg-paper disabled:opacity-30" aria-label={t('decrease')} disabled={qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                  <span className="w-full text-sm text-muted" id="qty-label">{t('quantity')}</span>
+                  <div className="flex items-center rounded-md border border-ink/30" role="group" aria-labelledby="qty-label">
+                    <button type="button" className="grid size-12 place-items-center hover:bg-paper disabled:opacity-30" aria-label={t('decrease')} disabled={qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))}>
                       <MinusIcon className="size-5" />
                     </button>
-                    <span className="w-10 text-center text-lg font-black" aria-live="polite">{num(qty)}</span>
-                    <button type="button" className="grid size-12 place-items-center rounded-full hover:bg-paper disabled:opacity-30" aria-label={t('increase')} disabled={!chosen || qty >= canAdd} onClick={() => setQty((q) => Math.min(canAdd, q + 1))}>
+                    <span className="w-10 text-center text-lg font-bold" aria-live="polite">{num(qty)}</span>
+                    <button type="button" className="grid size-12 place-items-center hover:bg-paper disabled:opacity-30" aria-label={t('increase')} disabled={!chosen || qty >= canAdd} onClick={() => setQty((q) => Math.min(canAdd, q + 1))}>
                       <PlusIcon className="size-5" />
                     </button>
                   </div>
@@ -180,33 +182,45 @@ export default function ProductPage({ id }) {
                 </div>
               )}
 
-              {msg && <p role={msg.kind === 'error' ? 'alert' : 'status'} className={`mt-4 rounded-2xl p-3 text-sm font-bold ${msg.kind === 'error' ? 'bg-brand/10 text-brand' : 'bg-emerald-50 text-emerald-800'}`}>{msg.text}</p>}
+              {msg && <p role={msg.kind === 'error' ? 'alert' : 'status'} className={`mt-4 rounded-md p-3 text-sm font-bold ${msg.kind === 'error' ? 'bg-brand/10 text-brand' : 'bg-emerald-50 text-emerald-800'}`}>{msg.text}</p>}
 
-              <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                <button type="button" onClick={() => add(false)} disabled={sold || (chosen && canAdd === 0)} className="btn btn-red h-14 text-lg">
+              {/* theme-style buttons: add to cart (outlined) above buy now (solid) */}
+              <div className="mt-6 grid gap-2.5">
+                <button type="button" onClick={() => add(false)} disabled={sold || (chosen && canAdd === 0)} className="btn btn-outline h-13 text-lg">
                   <BagIcon className="size-5" />
                   {sold ? t('outStock') : t('addToCart')}
                 </button>
                 {!sold && (
-                  <button type="button" onClick={() => add(true)} disabled={chosen && canAdd === 0} className="btn btn-ink h-14 text-lg">{t('buyNow')}</button>
+                  <button type="button" onClick={() => add(true)} disabled={chosen && canAdd === 0} className="btn btn-ink h-13 text-lg">{t('buyNow')}</button>
                 )}
               </div>
 
-              <a href={waLink(t('askMsg')(name, size))} target="_blank" rel="noopener noreferrer" className="btn mt-3 h-12 w-full border border-[#1fa855] text-[#178f47] hover:bg-[#1fa855]/10">
-                <WhatsAppIcon className="size-5" />
+              <a href={waLink(t('askMsg')(name, size))} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 font-semibold text-ink underline-offset-4 hover:underline">
+                <WhatsAppIcon className="size-5 text-[#1fa855]" />
                 {t('askWhatsapp')}
               </a>
 
-              <dl className="mt-6 grid gap-2 rounded-[20px] bg-paper p-4 text-sm">
-                {category && <Row label={t('filterCategory')} value={pick(category.name)} />}
-                <Row label={t('availableSizes')} value={<span dir="ltr">{inStock.map((v) => v.size).join(' · ') || '—'}</span>} />
-              </dl>
+              <div className="mt-7 border-t border-line">
+                <Accordion title={t('detailsTab')} open>
+                  <dl className="grid gap-2">
+                    {category && <Row label={t('filterCategory')} value={pick(category.name)} />}
+                    <Row label={t('availableSizes')} value={<span dir="ltr">{inStock.map((v) => v.size).join(' · ') || '—'}</span>} />
+                  </dl>
+                </Accordion>
+                <Accordion title={t('deliveryReturns')}>
+                  <p>{t('deliveryReturnsText')}</p>
+                  <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                    <a href="#/policy/delivery" className="link-u font-semibold text-ink">{pick(policies.delivery.title)}</a>
+                    <a href="#/policy/returns" className="link-u font-semibold text-ink">{pick(policies.returns.title)}</a>
+                  </p>
+                </Accordion>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {related.length > 0 && <Rail id="related" kicker={category ? pick(category.name) : ''} title={t('related')} products={related} />}
+      {related.length > 0 && <Rail id="related" title={t('related')} products={related} limit={4} />}
       {gallery !== null && <Gallery images={images} name={name} start={gallery} onClose={() => setGallery(null)} />}
     </>
   )
@@ -222,6 +236,18 @@ function StockLine({ p, chosen }) {
       <span className={`inline-block size-2.5 rounded-full ${dot}`} aria-hidden="true" />
       {label}
     </p>
+  )
+}
+
+function Accordion({ title, open = false, children }) {
+  return (
+    <details className="accordion border-b border-line" open={open}>
+      <summary className="flex cursor-pointer items-center justify-between gap-3 py-4 font-semibold text-ink">
+        {title}
+        <PlusIcon className="acc-icon size-5 transition-transform" />
+      </summary>
+      <div className="pb-5 text-sm leading-relaxed text-muted">{children}</div>
+    </details>
   )
 }
 

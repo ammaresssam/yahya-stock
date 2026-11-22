@@ -6,8 +6,8 @@
   --color-ink-900: #1f1e22;
   --color-brand: #e3262d;
   --color-brand-600: #c41e25;
-  --color-paper: #f5f4f1;
-  --color-line: #e7e4df;
+  --color-paper: #f3f3f3;
+  --color-line: #e3e3e3;
   --color-muted: #66656b;
 
   --font-sans: "Cairo", "Nunito", system-ui, sans-serif;
@@ -25,14 +25,21 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full font-bold transition duration-200 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md font-bold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn-red { @apply bg-brand text-white hover:bg-brand-600; box-shadow: 0 10px 24px -12px rgb(227 38 45 / .7); }
-  .btn-ink { @apply bg-ink text-white hover:bg-brand disabled:hover:bg-ink; }
+  .btn-red { @apply bg-brand text-white hover:bg-brand-600; }
+  .btn-ink { @apply bg-ink text-white hover:bg-ink-900 disabled:hover:bg-ink; }
+  /* Shopify-style secondary button: outlined, fills on hover */
+  .btn-outline { @apply border border-ink bg-white text-ink hover:bg-ink hover:text-white disabled:hover:bg-white disabled:hover:text-ink; }
+
+  /* one content width for every section, like a theme's "page width" */
+  .page-width { @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10; }
+  .section-title { @apply text-[1.6rem] font-bold leading-tight text-ink sm:text-[2rem]; }
+  .link-u { @apply underline decoration-1 underline-offset-4 hover:decoration-2; }
 
   .badge { @apply rounded-full px-2.5 py-1 text-[11px] font-extrabold leading-none; }
   /* sale badge: the one strong red element on a card */
-  .sale-badge { @apply rounded-lg bg-brand px-2 py-1 text-sm font-black leading-none text-white; box-shadow: 0 6px 14px -8px rgb(227 38 45 / .9); }
+  .sale-badge { @apply rounded-full bg-brand px-2.5 py-1 text-xs font-bold leading-none text-white; }
 
   .pill { @apply inline-flex h-9 items-center rounded-full border border-line bg-white px-3.5 text-sm font-bold text-ink transition hover:border-ink; }
   .pill[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
@@ -48,14 +55,14 @@
   .cat-link[aria-current="true"]::after { transform: scaleX(1); }
 
   .size-chip {
-    @apply min-w-9 rounded-xl border border-line bg-white px-2 py-1 text-[13px] font-bold sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
+    @apply min-w-9 rounded-full border border-line bg-white px-2 py-1 text-[13px] font-bold sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
   }
   .size-chip[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
-  .size-chip-lg { @apply h-12 min-w-14 rounded-2xl border border-line bg-white px-4 text-base font-black text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line; }
+  .size-chip-lg { @apply h-11 min-w-14 rounded-full border border-ink/30 bg-white px-5 text-base font-bold text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line; }
   .size-chip-lg[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
 
   .filter-tab {
-    @apply inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-white px-5 font-bold text-ink transition hover:border-ink;
+    @apply inline-flex h-11 shrink-0 items-center gap-2 rounded-md border border-line bg-white px-5 font-bold text-ink transition hover:border-ink;
   }
   .filter-tab[aria-selected="true"] { @apply border-ink bg-ink text-white; }
   .filter-count { @apply rounded-full bg-paper px-2 text-xs leading-5 text-muted; }
@@ -63,23 +70,23 @@
 
   .field-label { @apply mb-1.5 block text-sm font-bold text-ink; }
   .field {
-    @apply block h-12 w-full rounded-2xl border border-line bg-paper px-4 text-ink transition outline-none placeholder:text-muted/70 focus:border-ink focus:bg-white;
+    @apply block h-12 w-full rounded-md border border-ink/25 bg-white px-4 text-ink transition outline-none placeholder:text-muted/70 focus:border-ink focus:bg-white;
   }
 
   .contact-tile {
-    @apply flex items-center gap-4 rounded-[22px] p-5 transition duration-200 hover:-translate-y-0.5;
+    @apply flex items-center gap-4 rounded-lg p-5 transition duration-200 hover:-translate-y-0.5;
   }
   .contact-tile:hover { box-shadow: 0 14px 30px -18px rgb(0 0 0 / .45); }
 
-  .qty-btn { @apply grid size-8 place-items-center rounded-full text-ink hover:bg-paper; }
+  .qty-btn { @apply grid size-9 place-items-center text-ink hover:bg-paper; }
   .fab {
     @apply relative grid size-14 place-items-center rounded-full transition hover:scale-105;
     box-shadow: 0 12px 28px -10px rgb(0 0 0 / .45);
   }
-  .footer-h { @apply mb-4 text-sm font-extrabold uppercase tracking-wide text-white/45; }
+  .footer-h { @apply mb-4 text-base font-bold text-ink; }
 
   .skip-link {
-    @apply fixed start-3 top-3 z-[60] -translate-y-24 rounded-full bg-brand px-4 py-2 font-bold text-white transition focus:translate-y-0;
+    @apply fixed start-3 top-3 z-[60] -translate-y-24 rounded-md bg-brand px-4 py-2 font-bold text-white transition focus:translate-y-0;
   }
 
   /* active underline for header links */
@@ -104,28 +111,18 @@
 .g-sheen { background: radial-gradient(120% 80% at 50% 0%, rgb(255 255 255 / .35), transparent 60%); }
 .g-art { filter: drop-shadow(0 14px 16px rgb(0 0 0 / .14)); transition: transform .5s cubic-bezier(.2,.7,.2,1); transform-origin: 50% 8%; }
 
-.product-card { transition: transform .3s ease, box-shadow .3s ease; }
-.product-card:hover { transform: translateY(-4px); box-shadow: 0 22px 40px -26px rgb(0 0 0 / .45); }
-.product-card:hover .g-art { transform: rotate(-3deg) scale(1.03); }
-.product-card .product-media { transition: transform .5s ease; }
-img.product-media { transform-origin: center; }
-.product-card:hover img.product-media { transform: scale(1.04); }
+/* product card: the photo zooms a little on hover, like a theme's card */
+.product-card .product-media { transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+.product-card:hover .product-media { transform: scale(1.03); }
+.product-card:hover .g-art { transform: rotate(-3deg); }
 
 .cat-tile:hover .g-art { transform: rotate(4deg) scale(1.05); }
 
-.why-card { transition: transform .3s ease; }
-.why-card:hover { transform: translateY(-3px); }
 
 .hero-tile .g-art { animation: sway 6s ease-in-out infinite; }
 .hero-tile:nth-child(2) .g-art { animation-delay: -2s; }
 
 @keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
-
-/* marquee runs toward the reading direction */
-
-
-
-
 
 /* scroll reveal */
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease var(--d, 0ms), transform .7s cubic-bezier(.2,.7,.2,1) var(--d, 0ms); }
@@ -146,3 +143,12 @@ img.product-media { transform-origin: center; }
 
 .title-swap { animation: title-in .6s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes title-in { from { opacity: 0; transform: translateY(14px); } }
+
+/* collapsible rows on the product page */
+details.accordion > summary { list-style: none; }
+details.accordion > summary::-webkit-details-marker { display: none; }
+details.accordion[open] .acc-icon { transform: rotate(45deg); }
+
+/* announcement bar text swap */
+.announce-in { animation: title-in .45s cubic-bezier(.2,.7,.2,1) both; }
+.no-sheen .g-sheen { display: none; }

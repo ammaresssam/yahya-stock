@@ -8,8 +8,9 @@ import Rail from './Rail'
 export default function NewArrivals() {
   const { t } = useLang()
   const { products } = useData()
+  const { browse } = useCatalog()
   const list = products.filter((p) => p.isNew && p.totalStock > 0)
-  return <Rail id="new" kicker={t('newKicker')} title={t('newTitle')} text={t('newText')} products={list} tone="dark" />
+  return <Rail id="new" title={t('newTitle')} text={t('newText')} products={list} onViewAll={() => browse({ sort: 'newest' })} />
 }
 
 // Products the owner marked as featured in the admin panel. (There's no sales data,
@@ -18,7 +19,7 @@ export function StorePicks() {
   const { t } = useLang()
   const { products } = useData()
   const list = products.filter((p) => p.featured && p.totalStock > 0)
-  return <Rail id="picks" kicker={t('picksKicker')} title={t('picksTitle')} text={t('picksText')} products={list} />
+  return <Rail id="picks" title={t('picksTitle')} text={t('picksText')} products={list} limit={4} tone="grey" />
 }
 
 // Only products with a real "before discount" price on a size that's in stock.
@@ -30,7 +31,6 @@ export function Offers() {
   return (
     <Rail
       id="offers"
-      kicker={t('offersKicker')}
       title={t('offersTitle')}
       text={t('offersText')}
       products={list}

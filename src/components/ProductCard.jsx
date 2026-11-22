@@ -1,12 +1,11 @@
 import { useEffect, useId, useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useCart } from '../lib/cart'
-import { waLink } from '../lib/links'
 import { useData } from '../lib/store'
 import { LOW_STOCK } from '../lib/product'
 import { discountOf, maxDiscount } from '../lib/catalog'
 import GarmentArt from './GarmentArt'
-import { BagIcon, CameraIcon, WhatsAppIcon } from './Icons'
+import { BagIcon } from './Icons'
 
 export default function ProductCard({ product: p, className = '' }) {
   const { t, pick, price, num } = useLang()
@@ -44,10 +43,10 @@ export default function ProductCard({ product: p, className = '' }) {
   const many = p.images.length > 1
 
   return (
-    <article className={`product-card group relative flex flex-col overflow-hidden rounded-[20px] bg-white ring-1 ring-line ${className}`}>
-      <div className="relative bg-paper">
+    <article className={`product-card group relative flex flex-col ${className}`}>
+      <div className="relative overflow-hidden rounded-lg bg-paper">
         {p.image ? (
-          <a href={`#/product/${p.id}`} className="relative block w-full overflow-hidden" aria-label={`${t('viewProduct')}: ${name}`}>
+          <a href={`#/product/${p.id}`} className="relative block w-full" aria-label={`${t('viewProduct')}: ${name}`}>
             <img src={p.image} alt={name} loading="lazy" decoding="async" width="600" height="750" className="product-media aspect-[4/5] w-full object-cover" />
             {many && <img src={p.images[1]} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" />}
           </a>
@@ -57,69 +56,66 @@ export default function ProductCard({ product: p, className = '' }) {
           </a>
         )}
 
-        <div className="pointer-events-none absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-1.5">
-          <div className="flex flex-col items-start gap-1.5">
-            {badge > 0 && !sold && <span className="sale-badge">{t('off')(num(badge))}</span>}
-            {p.isNew && <span className="badge bg-ink text-white">{t('newBadge')}</span>}
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            {!live && <span className="badge bg-white/90 text-ink ring-1 ring-black/5">{t('sample')}</span>}
-            {many && <span className="badge inline-flex items-center gap-1 bg-ink/75 text-white"><CameraIcon className="size-3" />{num(p.images.length)}</span>}
-          </div>
+        {/* badges sit in the bottom corner, like a theme's card */}
+        <div className="pointer-events-none absolute bottom-2.5 start-2.5 flex flex-wrap gap-1.5">
+          {sold ? (
+            <span className="badge bg-ink text-white">{t('outStock')}</span>
+          ) : (
+            <>
+              {badge > 0 && <span className="sale-badge">{t('off')(num(badge))}</span>}
+              {p.isNew && <span className="badge bg-white text-ink ring-1 ring-ink/10">{t('newBadge')}</span>}
+              {lowLeft > 0 && <span className="badge bg-amber-400 text-amber-950">{t('itemsLeft')(num(lowLeft))}</span>}
+            </>
+          )}
         </div>
-
-        {sold && (
-          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-white/60">
-            <span className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-white">{t('outStock')}</span>
-          </div>
-        )}
-        {lowLeft > 0 && <span className="pointer-events-none absolute bottom-2.5 start-2.5 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-black text-amber-950">{t('itemsLeft')(num(lowLeft))}</span>}
+        {!live && <span className="badge pointer-events-none absolute end-2.5 top-2.5 bg-white/90 font-semibold text-muted">{t('sample')}</span>}
+        {sold && <div className="pointer-events-none absolute inset-0 bg-white/40" />}
       </div>
 
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-1">
-          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink sm:text-base"><a href={`#/product/${p.id}`} className="hover:underline">{name}</a></h3>
-          <a href={waLink(t('askMsg')(name, size))} target="_blank" rel="noopener noreferrer" aria-label={t('askWhatsapp')} title={t('askWhatsapp')} className="-mt-1 -me-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[#1fa855] hover:bg-[#1fa855]/10">
-            <WhatsAppIcon className="size-[18px]" />
-          </a>
-        </div>
+      <div className="flex flex-1 flex-col pt-3">
+        <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink sm:text-base">
+          <a href={`#/product/${p.id}`} className="underline-offset-4 group-hover:underline">{name}</a>
+        </h3>
 
-        <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2" aria-live="polite">
-          <span className={`text-lg font-black sm:text-xl ${onSale ? 'text-brand' : 'text-ink'}`}>
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-2" aria-live="polite">
+          <span className={`text-base font-bold sm:text-[17px] ${onSale ? 'text-brand' : 'text-ink'}`}>
             {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
           </span>
-          {onSale && <s className="text-sm font-semibold text-muted">{price(shownOld)}</s>}
+          {onSale && <s className="text-sm text-muted">{price(shownOld)}</s>}
         </p>
 
-        <div className="mt-2.5">
-          <p id={sizesId} className="sr-only">{t('chooseSize')}</p>
-          <div role="group" aria-labelledby={sizesId} className="flex flex-wrap gap-1">
-            {p.variants.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                disabled={v.stock === 0}
-                aria-pressed={size === v.size}
-                title={v.stock === 0 ? t('sizeSoldOut') : undefined}
-                aria-label={v.stock === 0 ? `${v.size} — ${t('sizeSoldOut')}` : v.size}
-                onClick={() => { setSize(v.size); setHint(null) }}
-                className={`size-chip ${v.stock === 0 ? 'line-through' : ''}`}
-              >
-                {v.size}
-              </button>
-            ))}
+        {!sold && (
+          <div className="mt-2.5">
+            <p id={sizesId} className="sr-only">{t('chooseSize')}</p>
+            <div role="group" aria-labelledby={sizesId} className="flex flex-wrap gap-1">
+              {p.variants.map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  disabled={v.stock === 0}
+                  aria-pressed={size === v.size}
+                  title={v.stock === 0 ? t('sizeSoldOut') : undefined}
+                  aria-label={v.stock === 0 ? `${v.size} — ${t('sizeSoldOut')}` : v.size}
+                  onClick={() => { setSize(v.size); setHint(null) }}
+                  className={`size-chip ${v.stock === 0 ? 'line-through' : ''}`}
+                >
+                  {v.size}
+                </button>
+              ))}
+            </div>
+            <p className={`mt-1 min-h-4 text-xs font-bold text-brand ${hint ? '' : 'invisible'}`} aria-live="polite">
+              {hint === 'pick' ? t('pickSizeFirst') : hint === 'max' ? t('maxInCart') : ' '}
+            </p>
           </div>
-          <p className={`mt-1 min-h-4 text-xs font-bold text-brand ${hint ? '' : 'invisible'}`} aria-live="polite">
-            {hint === 'pick' ? t('pickSizeFirst') : hint === 'max' ? t('maxInCart') : ' '}
-          </p>
-        </div>
+        )}
 
-        <button type="button" onClick={add} disabled={sold} className={`btn mt-auto h-11 w-full text-sm sm:text-[15px] ${added ? 'bg-emerald-600 text-white' : 'btn-ink'}`}>
-          {!added && <BagIcon className="size-[18px]" />}
-          {sold ? t('outStock') : added ? t('added') : t('addToCart')}
-        </button>
+        {!sold && (
+          <button type="button" onClick={add} className={`btn mt-auto h-11 w-full text-sm sm:text-[15px] ${added ? 'bg-emerald-600 text-white' : 'btn-outline'}`}>
+            {!added && <BagIcon className="size-[18px]" />}
+            {added ? t('added') : t('quickAdd')}
+          </button>
+        )}
       </div>
-
     </article>
   )
 }

@@ -20,15 +20,13 @@ export function TrustStrip() {
     [StoreIcon, t('trustStore'), t('trustStoreD')],
   ].filter(Boolean)
   return (
-    <section id="about" className="scroll-mt-32 border-y border-line bg-white" aria-label={t('whyKicker')}>
-      <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-5 px-4 py-6 sm:px-6 lg:grid-cols-4 lg:px-8">
+    <section className="border-t border-line bg-white py-12 sm:py-14" aria-label={t('whyKicker')}>
+      <ul className={`page-width grid grid-cols-2 gap-x-6 gap-y-10 ${items.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         {items.map(([Icon, title, text]) => (
-          <li key={title} className="flex items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-ink text-white"><Icon className="size-5" /></span>
-            <span>
-              <span className="block font-black text-ink">{title}</span>
-              <span className="block text-sm text-muted">{text}</span>
-            </span>
+          <li key={title} className="text-center">
+            <Icon className="mx-auto size-8 text-ink" />
+            <span className="mt-4 block text-lg font-bold text-ink">{title}</span>
+            <span className="mt-1 block text-sm leading-relaxed text-muted">{text}</span>
           </li>
         ))}
       </ul>
@@ -59,14 +57,13 @@ export function StoreContact() {
   }
 
   return (
-    <section id="visit" className="scroll-mt-32 bg-paper py-10 sm:py-14" aria-labelledby="store-title">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="text-sm font-black text-brand">{t('storeKicker')}</p>
-        <h2 id="store-title" className="mb-6 text-2xl font-black text-ink sm:text-3xl">{t('storeTitle')}</h2>
+    <section id="visit" className="scroll-mt-24 bg-paper py-12 sm:py-16" aria-labelledby="store-title">
+      <div className="page-width">
+        <h2 id="store-title" className="section-title mb-6 sm:mb-8">{t('storeTitle')}</h2>
 
         <div className="grid gap-4 lg:grid-cols-3">
           {/* store details */}
-          <div className="rounded-[24px] bg-ink p-6 text-white lg:col-span-1">
+          <div className="rounded-lg bg-ink p-6 text-white lg:col-span-1">
             <dl className="grid gap-5">
               <Info icon={PinIcon} label={t('address')}>
                 <span className="font-bold">{pick(site.address)}</span>
@@ -92,11 +89,11 @@ export function StoreContact() {
           </div>
 
           {/* contact actions */}
-          <div id="contact" className="grid scroll-mt-32 content-start gap-3">
+          <div id="contact" className="grid scroll-mt-24 content-start gap-3">
             <a href={waLink()} target="_blank" rel="noopener noreferrer" className="contact-tile bg-[#1fa855] text-white">
               <WhatsAppIcon className="size-8" />
               <span>
-                <span className="block text-xl font-black">{t('whatsapp')}</span>
+                <span className="block text-xl font-bold">{t('whatsapp')}</span>
                 <span dir="ltr" className="block text-white/85">{site.phones[0].display}</span>
               </span>
             </a>
@@ -105,7 +102,7 @@ export function StoreContact() {
                 <PhoneIcon className="size-6 text-brand" />
                 <span>
                   <span className="block text-sm font-semibold text-muted">{t('callMobile')}</span>
-                  <span dir="ltr" className="block text-lg font-black">{p.display}</span>
+                  <span dir="ltr" className="block text-lg font-bold">{p.display}</span>
                 </span>
               </a>
             ))}
@@ -123,12 +120,12 @@ export function StoreContact() {
 
           {/* map only once the address is confirmed; otherwise the quick message form */}
           {site.addressConfirmed ? (
-            <div className="relative min-h-[300px] overflow-hidden rounded-[24px] ring-1 ring-line">
+            <div className="relative min-h-[300px] overflow-hidden rounded-lg ring-1 ring-line">
               <iframe title={t('mapTitle')} src={mapsEmbed} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="absolute inset-0 h-full w-full border-0" />
             </div>
           ) : (
-            <form onSubmit={submit} noValidate className="rounded-[24px] bg-white p-5 ring-1 ring-line">
-              <h3 className="text-lg font-black text-ink">{t('msgFormTitle')}</h3>
+            <form onSubmit={submit} noValidate className="rounded-lg bg-white p-5 ring-1 ring-line">
+              <h3 className="text-lg font-bold text-ink">{t('msgFormTitle')}</h3>
               <div className="mt-3 grid gap-3">
                 <div>
                   <label htmlFor="c-name" className="field-label">{t('formName')}</label>

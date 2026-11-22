@@ -58,7 +58,7 @@ export default function Gallery({ images, name, start = 0, onClose }) {
       <div ref={track} onScroll={onScroll} className="no-scrollbar flex flex-1 snap-x snap-mandatory overflow-x-auto">
         {images.map((src, i) => (
           <div key={src + i} className="grid w-full shrink-0 snap-center place-items-center p-4">
-            <img src={src} alt={`${name} — ${t('photoOf')(num(i + 1), num(images.length))}`} className="max-h-full max-w-full rounded-2xl object-contain" />
+            <img src={src} alt={`${name} — ${t('photoOf')(num(i + 1), num(images.length))}`} className="max-h-full max-w-full rounded-md object-contain" />
           </div>
         ))}
       </div>

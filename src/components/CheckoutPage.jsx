@@ -45,8 +45,8 @@ export default function CheckoutPage() {
   if (!cart.lines.length) {
     return (
       <Section>
-        <p className="rounded-3xl bg-paper p-10 text-center text-muted">{t('checkoutEmpty')}</p>
-        <div className="mt-4 text-center"><a href="#shop" className="btn btn-ink h-11 px-6">{t('backToShop')}</a></div>
+        <p className="rounded-lg bg-paper p-10 text-center text-muted">{t('checkoutEmpty')}</p>
+        <div className="mt-4 text-center"><a href="#/shop" className="btn btn-ink h-11 px-6">{t('backToShop')}</a></div>
       </Section>
     )
   }
@@ -128,7 +128,7 @@ export default function CheckoutPage() {
   return (
     <Section>
       {!checkoutAvailable && (
-        <div className="mb-6 rounded-3xl bg-amber-50 p-5 text-amber-900">
+        <div className="mb-6 rounded-lg bg-amber-50 p-5 text-amber-900">
           <p className="font-bold">{t('checkoutNotConnected')}</p>
           <a href={waLink()} target="_blank" rel="noopener noreferrer" className="btn mt-3 h-11 bg-[#1fa855] px-5 text-white"><WhatsAppIcon className="size-5" />{t('orderWhatsapp')}</a>
         </div>
@@ -136,8 +136,8 @@ export default function CheckoutPage() {
 
       <form onSubmit={submit} noValidate className="grid gap-6 lg:grid-cols-[1.25fr_1fr] lg:items-start">
         <div className="grid gap-6">
-          <fieldset className="rounded-[28px] bg-white p-5 ring-1 ring-line sm:p-7">
-            <legend className="px-1 text-xl font-black text-ink">{t('deliveryDetails')}</legend>
+          <fieldset className="rounded-lg bg-white p-5 ring-1 ring-line sm:p-7">
+            <legend className="px-1 text-xl font-bold text-ink">{t('deliveryDetails')}</legend>
             <div className="mt-2 grid gap-4 sm:grid-cols-2">
               <Input id="name" label={t('fName')} value={form.name} onChange={set('name')} error={errors.name && t('errField').name} autoComplete="name" />
               <Input id="phone" label={t('fPhone')} hint={t('fPhoneHint')} value={form.phone} onChange={set('phone')} error={errors.phone && t('errField').phone} autoComplete="tel" inputMode="tel" dir="ltr" placeholder="01X XXXX XXXX" />
@@ -158,8 +158,8 @@ export default function CheckoutPage() {
             </div>
           </fieldset>
 
-          <fieldset className="rounded-[28px] bg-white p-5 ring-1 ring-line sm:p-7">
-            <legend className="px-1 text-xl font-black text-ink">{t('payMethod')}</legend>
+          <fieldset className="rounded-lg bg-white p-5 ring-1 ring-line sm:p-7">
+            <legend className="px-1 text-xl font-bold text-ink">{t('payMethod')}</legend>
             <div className="mt-2 grid gap-3">
               <PayOption checked={method === 'cod'} onChange={() => setMethod('cod')} title={t('payCod')} hint={t('payCodHint')} />
               <PayOption checked={method === 'card'} onChange={() => setMethod('card')} title={t('payCard')} hint={cardPaymentsEnabled ? 'Visa · Mastercard · Meeza' : t('payCardSoon')} disabled={!cardPaymentsEnabled} />
@@ -168,8 +168,8 @@ export default function CheckoutPage() {
           </fieldset>
         </div>
 
-        <aside className="rounded-[28px] bg-paper p-5 sm:p-7 lg:sticky lg:top-28">
-          <h2 className="text-xl font-black text-ink">{t('summary')}</h2>
+        <aside className="rounded-lg bg-paper p-5 sm:p-7 lg:sticky lg:top-28">
+          <h2 className="text-xl font-bold text-ink">{t('summary')}</h2>
           <ul className="mt-4 divide-y divide-line">
             {cart.lines.map((l) => (
               <li key={l.id + l.size} className="flex items-center gap-3 py-3">
@@ -187,12 +187,12 @@ export default function CheckoutPage() {
             <Row label={t('shippingFee')} value={fee === null ? t('pickZoneForFee') : price(fee)} />
             <div className="mt-1 flex items-baseline justify-between border-t border-line pt-3">
               <dt className="font-bold text-ink">{t('grandTotal')}</dt>
-              <dd className="text-2xl font-black text-ink">{price(confirmedTotal ?? total)}</dd>
+              <dd className="text-2xl font-bold text-ink">{price(confirmedTotal ?? total)}</dd>
             </div>
           </dl>
 
           {banner && (
-            <p role="alert" className={`mt-4 rounded-2xl p-3 text-sm font-bold ${banner.kind === 'warn' ? 'bg-amber-50 text-amber-900' : 'bg-brand/10 text-brand'}`}>{banner.text}</p>
+            <p role="alert" className={`mt-4 rounded-md p-3 text-sm font-bold ${banner.kind === 'warn' ? 'bg-amber-50 text-amber-900' : 'bg-brand/10 text-brand'}`}>{banner.text}</p>
           )}
 
           <button type="submit" disabled={busy || !checkoutAvailable} className="btn btn-red mt-4 h-13 w-full text-lg">
@@ -213,8 +213,8 @@ function Section({ children }) {
   return (
     <section className="bg-white py-10 sm:py-14" aria-labelledby="checkout-title">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <a href="#shop" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('backToShop')}</a>
-        <h1 id="checkout-title" className="mt-2 mb-6 text-3xl font-black text-ink sm:text-4xl">{t('checkoutTitle')}</h1>
+        <a href="#/shop" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('backToShop')}</a>
+        <h1 id="checkout-title" className="mt-2 mb-6 text-3xl font-bold text-ink sm:text-4xl">{t('checkoutTitle')}</h1>
         {children}
       </div>
     </section>
@@ -241,7 +241,7 @@ function Input({ id, label, hint, error, textarea, ...rest }) {
 
 function PayOption({ checked, onChange, title, hint, disabled }) {
   return (
-    <label className={`flex items-center gap-3 rounded-2xl border p-4 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${checked ? 'border-ink bg-paper' : 'border-line'}`}>
+    <label className={`flex items-center gap-3 rounded-md border p-4 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${checked ? 'border-ink bg-paper' : 'border-line'}`}>
       <input type="radio" name="payment" className="size-5 accent-[#e3262d]" checked={checked} onChange={onChange} disabled={disabled} />
       <span>
         <span className="block font-bold text-ink">{title}</span>

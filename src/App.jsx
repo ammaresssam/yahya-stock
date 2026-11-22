@@ -9,6 +9,7 @@ import Hero from './components/Hero'
 import Categories from './components/Categories'
 import Shop from './components/Shop'
 import NewArrivals, { Offers, StorePicks } from './components/NewArrivals'
+import ImageWithText from './components/ImageWithText'
 import ProductPage from './components/ProductPage'
 import OrdersPage from './components/OrdersPage'
 import MobileNav from './components/MobileNav'
@@ -20,9 +21,10 @@ import CheckoutPage from './components/CheckoutPage'
 import OrderPage from './components/OrderPage'
 import { WhatsAppIcon } from './components/Icons'
 
-// "#/checkout" and "#/order/<token>" are pages; any other hash (e.g. "#shop") is a section of the home page.
+// "#/shop", "#/checkout", "#/order/<token>"… are pages; any other hash (e.g. "#new") is a section of the home page.
 function readRoute() {
   const h = window.location.hash
+  if (h === '#shop' || h.startsWith('#/shop')) return { name: 'shop' }
   if (h.startsWith('#/checkout')) return { name: 'checkout' }
   const m = h.match(/^#\/order\/([A-Za-z0-9_-]{32,128})/)
   if (m) return { name: 'order', token: m[1] }
@@ -67,7 +69,7 @@ function useReveal(key) {
 function FloatingWhatsApp() {
   const { t } = useLang()
   return (
-    <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label={t('orderWhatsapp')} className="fab fixed bottom-4 end-4 z-30 hidden size-12 bg-[#1fa855] text-white md:grid">
+    <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label={t('orderWhatsapp')} className="fab fixed bottom-5 end-5 z-30 hidden size-12 bg-[#1fa855] text-white md:grid">
       <WhatsAppIcon className="size-6" />
     </a>
   )
@@ -90,7 +92,7 @@ function Page() {
   return (
     <>
       <a href="#main" className="skip-link">Skip to content</a>
-      <Header />
+      <Header route={route.name} />
       <main id="main">
         {route.name === 'checkout' ? (
           <CheckoutPage />
@@ -102,12 +104,15 @@ function Page() {
           <OrdersPage />
         ) : route.name === 'policy' ? (
           <PolicyPage which={route.id} />
+        ) : route.name === 'shop' ? (
+          <Shop />
         ) : (
           <>
+            {/* home page sections, in the order a Shopify theme uses */}
             <Hero />
             <Categories />
             <Offers />
-            <Shop />
+            <ImageWithText />
             <NewArrivals />
             <StorePicks />
             <TrustStrip />

@@ -63,7 +63,7 @@ export default function CartDrawer() {
   return (
     <div className={`fixed inset-0 z-50 ${cart.open ? '' : 'pointer-events-none'}`} aria-hidden={!cart.open}>
       <div
-        className={`absolute inset-0 bg-ink/60 backdrop-blur-[2px] transition-opacity duration-300 ${cart.open ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 bg-ink/50 transition-opacity duration-300 ${cart.open ? 'opacity-100' : 'opacity-0'}`}
         onClick={() => cart.setOpen(false)}
       />
       <aside
@@ -74,13 +74,12 @@ export default function CartDrawer() {
         inert={cart.open ? undefined : ''}
         className={`absolute top-0 ${side} flex h-full w-full max-w-md flex-col bg-white shadow-2xl transition-[transform,visibility] duration-300 ease-out ${cart.open ? 'visible translate-x-0' : `invisible ${hidden}`}`}
       >
-        <div className="flex items-center justify-between bg-ink px-5 py-4 text-white">
-          <h2 id="cart-title" className="flex items-center gap-2 text-xl font-black">
-            <BagIcon className="size-6" />
+        <div className="flex items-center justify-between border-b border-line px-5 py-4 text-ink">
+          <h2 id="cart-title" className="flex items-center gap-2 text-2xl font-bold">
             {t('cartTitle')}
-            {cart.count > 0 && <span className="rounded-full bg-brand px-2.5 text-sm leading-6">{num(cart.count)}</span>}
+            {cart.count > 0 && <span className="text-base font-semibold text-muted">({num(cart.count)})</span>}
           </h2>
-          <button ref={closeBtn} type="button" onClick={() => cart.setOpen(false)} aria-label={t('closeCart')} className="grid size-10 place-items-center rounded-full hover:bg-white/10">
+          <button ref={closeBtn} type="button" onClick={() => cart.setOpen(false)} aria-label={t('closeCart')} className="grid size-10 place-items-center rounded-md hover:bg-paper">
             <CloseIcon className="size-6" />
           </button>
         </div>
@@ -88,48 +87,48 @@ export default function CartDrawer() {
         {cart.lines.length === 0 ? (
           <div className="grid flex-1 place-items-center p-8 text-center">
             <div>
-              <span className="mx-auto grid size-20 place-items-center rounded-full bg-paper text-muted"><BagIcon className="size-9" /></span>
-              <p className="mt-4 text-muted">{t('cartEmpty')}</p>
-              <a href="#shop" onClick={() => cart.setOpen(false)} className="btn btn-ink mt-5 h-11 px-6">{t('heroCta')}</a>
+              <BagIcon className="mx-auto size-10 text-muted" />
+              <p className="mt-4 text-lg font-semibold text-ink">{t('cartEmpty')}</p>
+              <a href="#/shop" onClick={() => cart.setOpen(false)} className="btn btn-ink mt-5 h-12 px-8">{t('heroCta')}</a>
             </div>
           </div>
         ) : (
           <>
             {cart.adjusted && (
-              <p role="status" className="mx-5 mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-800">
+              <p role="status" className="mx-5 mt-4 rounded-md bg-amber-50 p-3 text-sm font-bold text-amber-800">
                 {t('cartStockIssue')}
                 <button type="button" onClick={cart.clearAdjusted} className="ms-2 underline">{t('ok')}</button>
               </p>
             )}
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {cart.lines.map((l) => (
-                <li key={l.id + l.size} className="flex gap-3 py-4">
+                <li key={l.id + l.size} className="flex gap-4 py-5">
                   {l.product.image ? (
-                    <img src={l.product.image} alt="" className="size-20 shrink-0 rounded-2xl object-cover" />
+                    <img src={l.product.image} alt="" className="aspect-[4/5] w-20 shrink-0 rounded-md object-cover" />
                   ) : (
-                    <GarmentArt {...l.product.art} className="size-20 shrink-0 rounded-2xl p-1.5" />
+                    <GarmentArt {...l.product.art} className="aspect-[4/5] w-20 shrink-0 rounded-md p-1.5" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <a href={`#/product/${l.product.id}`} onClick={() => cart.setOpen(false)} className="font-extrabold text-ink hover:underline">{pick(l.product.name)}</a>
+                    <a href={`#/product/${l.product.id}`} onClick={() => cart.setOpen(false)} className="font-semibold text-ink underline-offset-4 hover:underline">{pick(l.product.name)}</a>
                     <p className="text-sm text-muted">{t('size')}: <b dir="ltr" className="text-ink">{l.size}</b> · {t('unitPrice')(price(l.unitPrice))}</p>
                     {l.qty >= l.available && <p className="text-xs font-bold text-amber-600">{t('leftOnly')(num(l.available))}</p>}
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center rounded-full ring-1 ring-line">
+                      <div className="flex items-center rounded-md border border-ink/30">
                         <button type="button" className="qty-btn disabled:opacity-30" disabled={l.qty >= l.available} aria-label={t('increase')} onClick={() => cart.setQty(l.id, l.size, l.qty + 1)}><PlusIcon className="size-4" /></button>
                         <span className="w-7 text-center font-bold" aria-label={t('qty')}>{num(l.qty)}</span>
                         <button type="button" className="qty-btn" aria-label={t('decrease')} onClick={() => cart.setQty(l.id, l.size, l.qty - 1)}><MinusIcon className="size-4" /></button>
                       </div>
-                      <span className="font-black text-brand">{price(l.unitPrice * l.qty)}</span>
+                      <span className="font-bold text-ink">{price(l.unitPrice * l.qty)}</span>
                     </div>
                   </div>
-                  <button type="button" onClick={() => cart.setQty(l.id, l.size, 0)} aria-label={`${t('remove')} ${pick(l.product.name)}`} className="grid size-9 shrink-0 place-items-center self-start rounded-full text-muted hover:bg-paper hover:text-brand">
+                  <button type="button" onClick={() => cart.setQty(l.id, l.size, 0)} aria-label={`${t('remove')} ${pick(l.product.name)}`} className="grid size-9 shrink-0 place-items-center self-start rounded-md text-muted hover:bg-paper hover:text-brand">
                     <TrashIcon className="size-[18px]" />
                   </button>
                 </li>
               ))}
             </ul>
 
-            <div className="border-t border-line bg-paper p-5">
+            <div className="border-t border-line bg-white p-5">
               {!checkoutAvailable && (
                 <div className="mb-4 grid gap-3 sm:grid-cols-2">
                   <div>
@@ -147,12 +146,12 @@ export default function CartDrawer() {
                 {checkoutAvailable && <div className="flex justify-between"><dt className="text-muted">{t('shippingFee')}</dt><dd className="font-bold text-ink">{t('deliveryAtCheckout')}</dd></div>}
                 <div className="mt-1 flex items-baseline justify-between border-t border-line pt-2">
                   <dt className="font-bold text-ink">{checkoutAvailable ? t('totalBeforeDelivery') : t('subtotal')}</dt>
-                  <dd className="text-2xl font-black text-ink">{price(cart.total)}</dd>
+                  <dd className="text-xl font-bold text-ink">{price(cart.total)}</dd>
                 </div>
               </dl>
               <p className="mt-1 text-xs leading-relaxed text-muted">{checkoutAvailable ? t('cartNoteCheckout') : t('cartNote')}</p>
               {checkoutAvailable && (
-                <a href="#/checkout" onClick={() => cart.setOpen(false)} className="btn btn-red mt-4 h-13 w-full text-lg">
+                <a href="#/checkout" onClick={() => cart.setOpen(false)} className="btn btn-ink mt-4 h-13 w-full text-lg">
                   {t('checkout')}
                 </a>
               )}
