@@ -108,7 +108,7 @@ export default function ProductPage({ id }) {
                     <img src={images[img]} alt={`${name} — ${t('photoN')(num(img + 1))}`} className="aspect-[4/5] w-full object-cover" fetchPriority="high" />
                   </button>
                 ) : (
-                  <GarmentArt {...p.art} label={`${name} — ${t('illustration')}`} className="aspect-[4/5] p-12" />
+                  <GarmentArt {...p.art} bg="#efece8" label={`${name} — ${t('illustration')}`} className="aspect-[4/5] p-12" />
                 )}
                 <div className="pointer-events-none absolute start-3 top-3 flex flex-col items-start gap-1.5">
                   {pct > 0 && !sold && <span className="sale-badge text-sm">{t('off')(num(pct))}</span>}
@@ -135,7 +135,7 @@ export default function ProductPage({ id }) {
               <h1 id="product-title" className="display mt-1 text-[1.75rem] leading-tight text-ink-900 sm:text-4xl">{name}</h1>
 
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1" aria-live="polite">
-                <span className={`display text-2xl ${onSale ? 'text-brand' : 'text-ink'}`}>
+                <span className={`text-2xl ${onSale ? 'text-brand' : 'text-ink'}`}>
                   {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
                 </span>
                 {onSale && <s className="text-lg text-muted">{price(shownOld)}</s>}

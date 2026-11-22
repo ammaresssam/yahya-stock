@@ -106,7 +106,7 @@ export default function CartDrawer() {
                   {l.product.image ? (
                     <img src={l.product.image} alt="" className="aspect-[4/5] w-20 shrink-0 rounded-md object-cover" />
                   ) : (
-                    <GarmentArt {...l.product.art} className="aspect-[4/5] w-20 shrink-0 rounded-md p-1.5" />
+                    <GarmentArt {...l.product.art} bg="#efece8" className="aspect-[4/5] w-20 shrink-0 rounded-md p-1.5" />
                   )}
                   <div className="min-w-0 flex-1">
                     <a href={`#/product/${l.product.id}`} onClick={() => cart.setOpen(false)} className="font-semibold text-ink underline-offset-4 hover:underline">{pick(l.product.name)}</a>

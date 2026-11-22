@@ -163,8 +163,8 @@ function Timeline({ current, history, date }) {
         return (
           <li key={s} className="flex gap-3">
             <span className="flex flex-col items-center">
-              <span className={`grid size-7 place-items-center rounded-full text-xs font-bold ${done ? 'bg-brand text-white' : 'bg-paper text-muted'}`} aria-hidden="true">{done ? '✓' : i + 1}</span>
-              {i < STEPS.length - 1 && <span className={`w-0.5 flex-1 ${i < reached ? 'bg-brand' : 'bg-line'}`} style={{ minHeight: 18 }} />}
+              <span className={`grid size-7 place-items-center rounded-full text-xs font-bold ${done ? 'bg-ink-900 text-white' : 'bg-paper text-muted'}`} aria-hidden="true">{done ? '✓' : i + 1}</span>
+              {i < STEPS.length - 1 && <span className={`w-0.5 flex-1 ${i < reached ? 'bg-ink-900' : 'bg-line'}`} style={{ minHeight: 18 }} />}
             </span>
             <span className="pb-4">
               <span className={`block font-bold ${done ? 'text-ink' : 'text-muted'}`}>{t('status')[s]}</span>

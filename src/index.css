@@ -1,21 +1,25 @@
 @import "tailwindcss";
 
-/* Brand palette taken from the shop sign: charcoal panel, signal red, white */
+/* Light, soft palette: white page, warm-grey stone tones, near-black type.
+   "brand" is a muted cocoa used for small accents (sale prices, focus), never a loud colour. */
 @theme {
-  --color-ink: #2b2a2f;
-  --color-ink-900: #1f1e22;
-  --color-brand: #e3262d;
-  --color-brand-600: #c41e25;
-  --color-paper: #f3f3f3;
-  --color-line: #e3e3e3;
-  --color-muted: #66656b;
-  /* light grey page, like the reference store */
-  --color-page: #ebebeb;
+  --color-ink: #2f2d2b;
+  --color-ink-900: #1c1b1a;
+  --color-brand: #7a5c4e;
+  --color-brand-600: #634a3e;
+  --color-paper: #f4f2ef;
+  --color-stone: #d9d4ce;
+  --color-line: #e6e3df;
+  --color-muted: #75716c;
+  --color-page: #ffffff;
 
-  --font-sans: "Cairo", "Nunito", system-ui, sans-serif;
+  /* Latin text uses Jost; Arabic letters fall back to Cairo */
+  --font-sans: "Jost", "Cairo", system-ui, sans-serif;
   --font-logo: "Nunito", system-ui, sans-serif;
-  /* bold condensed display face: Anton has no Arabic, so Arabic letters fall back to Changa */
-  --font-display: "Anton", "Changa", "Cairo", system-ui, sans-serif;
+  /* elegant serif: Cormorant Garamond for Latin, Amiri for Arabic */
+  --font-display: "Cormorant Garamond", "Amiri", Georgia, serif;
+  /* script accent word: Pinyon Script for Latin, Aref Ruqaa for Arabic */
+  --font-script: "Pinyon Script", "Aref Ruqaa", cursive;
 }
 
 @layer base {
@@ -23,39 +27,46 @@
   body { @apply bg-page font-sans text-ink antialiased; }
   /* keep the last content clear of the phone tab bar */
   @media (max-width: 767px) { body { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); } }
-  :focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--color-ink-900); outline-offset: 2px; }
   button:not(:disabled), [role="tab"] { cursor: pointer; }
 }
 
 @layer components {
-  /* condensed headings. English is upper-case with wide letter spacing;
+  /* Serif headings. English is upper-case with wide letter spacing;
      Arabic is never spaced out, because that breaks the joined letters. */
-  :is(.display, .btn, .section-title, .footer-h) { font-family: var(--font-display); font-weight: 700; font-synthesis: none; letter-spacing: 0; }
-  :lang(en) :is(.display, .btn, .section-title, .footer-h) { text-transform: uppercase; letter-spacing: .12em; font-weight: 400; }
+  :is(.display, .section-title, .footer-h) { font-family: var(--font-display); font-weight: 500; letter-spacing: 0; }
+  :lang(ar) :is(.display, .section-title, .footer-h) { font-weight: 400; }
+  :lang(en) :is(.display, .section-title, .footer-h) { text-transform: uppercase; letter-spacing: .08em; }
+  .script { font-family: var(--font-script); font-weight: 400; letter-spacing: 0; text-transform: none; }
+  /* small thin capitals for menus, buttons and labels (English only) */
+  :is(.caps, .btn) { font-weight: 400; letter-spacing: 0; }
+  :lang(en) :is(.caps, .btn) { text-transform: uppercase; letter-spacing: .14em; }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-none text-[15px] transition duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-none text-[13px] transition duration-200 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-red { @apply bg-brand text-white hover:bg-brand-600; }
   .btn-ink { @apply bg-ink-900 text-white hover:bg-ink disabled:hover:bg-ink-900; }
   /* Shopify-style secondary button: outlined, fills on hover */
-  .btn-outline { @apply border border-ink-900 bg-transparent text-ink hover:bg-ink hover:text-white disabled:hover:bg-white disabled:hover:text-ink; }
+  .btn-outline { @apply border border-ink/60 bg-transparent text-ink hover:border-ink-900 hover:bg-ink-900 hover:text-white disabled:hover:bg-transparent disabled:hover:text-ink; }
+  /* thin white outline button for use over pictures */
+  .btn-ghost { @apply border border-white/80 bg-transparent text-white hover:bg-white hover:text-ink-900; }
 
   /* one content width for every section, like a theme's "page width" */
   .page-width { @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10; }
-  .section-title { @apply text-[1.7rem] leading-tight text-ink-900 sm:text-[2.1rem]; }
+  .section-title { @apply text-[1.9rem] leading-tight text-ink-900 sm:text-[2.5rem]; }
   .link-u { @apply underline decoration-1 underline-offset-4 hover:decoration-2; }
 
-  .badge { @apply rounded-full px-2.5 py-1 text-[11px] font-extrabold leading-none; }
-  /* sale badge: the one strong red element on a card */
-  .sale-badge { @apply rounded-full bg-brand px-2.5 py-1 text-xs font-bold leading-none text-white; }
+  .badge { @apply px-2 py-1 text-[11px] font-medium leading-none; }
+  /* sale tag: quiet, a white label with dark text */
+  .sale-badge { @apply bg-white px-2 py-1 text-[11px] font-medium leading-none text-ink-900 ring-1 ring-ink/15; }
 
-  .pill { @apply inline-flex h-9 items-center rounded-full border border-line bg-white px-3.5 text-sm font-bold text-ink transition hover:border-ink; }
+  .pill { @apply inline-flex h-9 items-center border border-line bg-white px-3.5 text-sm text-ink transition hover:border-ink; }
   .pill[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
 
   .toggle { @apply relative h-6 w-11 shrink-0 cursor-pointer appearance-none rounded-full bg-line transition; }
   .toggle::after { content: ""; @apply absolute top-0.5 size-5 rounded-full bg-white shadow transition-all; inset-inline-start: 2px; }
-  .toggle:checked { @apply bg-brand; }
+  .toggle:checked { @apply bg-ink-900; }
   .toggle:checked::after { inset-inline-start: 22px; }
 
   /* category bar: red underline marks the active one */
@@ -64,10 +75,10 @@
   .cat-link[aria-current="true"]::after { transform: scaleX(1); }
 
   .size-chip {
-    @apply min-w-9 border border-ink/20 bg-transparent px-2 py-1 text-[13px] font-bold sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
+    @apply min-w-9 border border-ink/20 bg-transparent px-2 py-1 text-[13px] font-medium sm:min-w-10 sm:px-2.5 sm:py-1.5 sm:text-sm text-ink transition hover:border-ink disabled:opacity-40 disabled:hover:border-line;
   }
   .size-chip[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
-  .size-chip-lg { @apply h-11 min-w-14 border border-ink/30 bg-transparent px-5 text-base font-bold text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line; }
+  .size-chip-lg { @apply h-11 min-w-14 border border-ink/30 bg-transparent px-5 text-base font-medium text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line; }
   .size-chip-lg[aria-pressed="true"] { @apply border-ink bg-ink text-white; }
 
   .filter-tab {
@@ -161,3 +172,10 @@ details.accordion[open] .acc-icon { transform: rotate(45deg); }
 /* announcement bar text swap */
 .announce-in { animation: title-in .45s cubic-bezier(.2,.7,.2,1) both; }
 .no-sheen .g-sheen { display: none; }
+
+/* moving strip under the banner; it runs toward the reading direction */
+.marquee-track { animation: marquee 40s linear infinite; }
+[dir="rtl"] .marquee-track { animation-name: marquee-rtl; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes marquee-rtl { to { transform: translateX(50%); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }

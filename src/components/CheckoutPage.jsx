@@ -173,7 +173,7 @@ export default function CheckoutPage() {
           <ul className="mt-4 divide-y divide-line">
             {cart.lines.map((l) => (
               <li key={l.id + l.size} className="flex items-center gap-3 py-3">
-                {l.product.image ? <img src={l.product.image} alt="" className="size-14 shrink-0 rounded-xl object-cover" /> : <GarmentArt {...l.product.art} className="size-14 shrink-0 rounded-xl p-1" />}
+                {l.product.image ? <img src={l.product.image} alt="" className="size-14 shrink-0 rounded-xl object-cover" /> : <GarmentArt {...l.product.art} bg="#efece8" className="size-14 shrink-0 rounded-xl p-1" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold text-ink">{pick(l.product.name)}</p>
                   <p className="text-sm text-muted">{t('size')} <span dir="ltr">{l.size}</span> × {num(l.qty)}</p>

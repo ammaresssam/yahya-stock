@@ -7,7 +7,7 @@ import { isOnSale, maxDiscount } from '../lib/catalog'
 import { checkoutAvailable, rememberedOrders } from '../lib/api'
 import { waLink } from '../lib/links'
 import { site } from '../data/site'
-import { Wordmark } from './Brand'
+import { TextLogo } from './Brand'
 import { BagIcon, ChevronIcon, CloseIcon, GlobeIcon, MenuIcon, ReceiptIcon, SearchIcon, WhatsAppIcon } from './Icons'
 
 export const navItems = [
@@ -50,18 +50,18 @@ function AnnouncementBar() {
   )
 
   return (
-    <div className="bg-ink-900 text-white" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+    <div className="border-b border-line bg-paper text-ink" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       <div className="page-width flex min-h-10 items-center justify-center gap-2">
         {many && (
-          <button type="button" onClick={() => setI((n) => n - 1)} aria-label={t('prevMessage')} className="grid size-8 shrink-0 place-items-center rounded-md hover:bg-white/15">
+          <button type="button" onClick={() => setI((n) => n - 1)} aria-label={t('prevMessage')} className="grid size-8 shrink-0 place-items-center hover:bg-ink/5">
             <ChevronIcon className="size-4 -scale-x-100 rtl:scale-x-100" />
           </button>
         )}
-        <p key={cur.key} className="announce-in display min-w-0 flex-1 py-1.5 text-center text-[13px] leading-snug sm:flex-none sm:px-6" aria-live="polite">
+        <p key={cur.key} className="announce-in caps min-w-0 flex-1 py-1.5 text-center text-[12px] leading-snug sm:flex-none sm:px-6" aria-live="polite">
           {content}
         </p>
         {many && (
-          <button type="button" onClick={() => setI((n) => n + 1)} aria-label={t('nextMessage')} className="grid size-8 shrink-0 place-items-center rounded-md hover:bg-white/15">
+          <button type="button" onClick={() => setI((n) => n + 1)} aria-label={t('nextMessage')} className="grid size-8 shrink-0 place-items-center hover:bg-ink/5">
             <ChevronIcon className="size-4 rtl:-scale-x-100" />
           </button>
         )}
@@ -118,7 +118,7 @@ function SearchBar({ onClose }) {
 
 // Phone menu: a drawer from the start side with the same links as the desktop menu.
 function MenuDrawer({ open, onClose, links }) {
-  const { t, pick, dir, toggle } = useLang()
+  const { t, pick, dir, toggle, lang } = useLang()
   const closeBtn = useRef(null)
 
   useEffect(() => {
@@ -146,7 +146,7 @@ function MenuDrawer({ open, onClose, links }) {
         className={`absolute inset-y-0 start-0 flex w-[86%] max-w-sm flex-col bg-white shadow-xl transition-[transform,visibility] duration-300 ease-out ${open ? 'visible translate-x-0' : `invisible ${hidden}`}`}
       >
         <div className="flex h-16 items-center justify-between border-b border-line px-4">
-          <Wordmark tone="light" className="h-9 w-auto" title={pick(site.name)} />
+          <TextLogo lang={lang} size="sm" />
           <button ref={closeBtn} type="button" onClick={onClose} aria-label={t('closeMenu')} className="grid size-10 place-items-center rounded-md text-ink hover:bg-paper">
             <CloseIcon className="size-6" />
           </button>
@@ -184,7 +184,7 @@ function MenuDrawer({ open, onClose, links }) {
 }
 
 export default function Header({ route = 'home' }) {
-  const { t, pick, toggle } = useLang()
+  const { t, pick, toggle, lang } = useLang()
   const cart = useCart()
   const { categories, products } = useData()
   const { filters, browse } = useCatalog()
@@ -207,13 +207,13 @@ export default function Header({ route = 'home' }) {
   ]
 
   const icon = 'relative grid size-11 place-items-center rounded-md text-ink transition hover:bg-paper'
-  const navLink = (on, hot) => `display relative inline-flex h-10 items-center px-3 text-[15px] transition underline-offset-[8px] hover:underline ${on ? 'text-ink underline decoration-2' : hot ? 'text-brand' : 'text-ink/70 hover:text-ink'}`
+  const navLink = (on, hot) => `caps relative inline-flex h-10 items-center px-3 text-[13px] transition underline-offset-[8px] hover:underline ${on ? 'text-ink-900 underline' : hot ? 'text-brand' : 'text-ink/75 hover:text-ink-900'}`
 
   return (
     <>
       <AnnouncementBar />
       <header className="sticky top-0 z-40 border-b border-line bg-page">
-        <div className="page-width relative flex h-16 items-center gap-1 lg:h-[76px] lg:gap-6">
+        <div className="page-width relative flex h-[72px] items-center gap-1 lg:h-[96px] lg:gap-6">
           <button
             type="button"
             className={`${icon} -ms-2.5 lg:hidden`}
@@ -226,7 +226,7 @@ export default function Header({ route = 'home' }) {
           </button>
 
           <a href="#home" className="absolute start-1/2 shrink-0 -translate-x-1/2 rounded-md rtl:translate-x-1/2 lg:static lg:translate-x-0 lg:rtl:translate-x-0" aria-label={pick(site.name)}>
-            <Wordmark tone="light" className="h-10 w-auto lg:h-12" title={pick(site.name)} />
+            <TextLogo lang={lang} />
           </a>
 
           <nav aria-label={t('categoriesNav')} className="hidden min-w-0 flex-1 lg:block">
@@ -245,21 +245,21 @@ export default function Header({ route = 'home' }) {
 
           <div className="ms-auto flex items-center -me-2.5 lg:ms-0">
             <button type="button" className={icon} aria-label={t('searchLabel')} aria-expanded={searchOpen} onClick={() => setSearchOpen(true)}>
-              <SearchIcon className="size-[22px]" />
+              <SearchIcon className="size-5" />
             </button>
-            <button type="button" onClick={toggle} aria-label={t('switchLangLabel')} className="hidden h-11 items-center gap-1.5 rounded-md px-2.5 text-sm font-semibold text-ink hover:bg-paper sm:inline-flex">
+            <button type="button" onClick={toggle} aria-label={t('switchLangLabel')} className="caps hidden h-11 items-center gap-1.5 px-2.5 text-[12px] text-ink hover:bg-paper sm:inline-flex">
               <GlobeIcon className="size-4" />
               {t('switchLang')}
             </button>
             {showOrders && (
               <a href="#/orders" aria-label={t('myOrders')} title={t('myOrders')} className={`${icon} hidden md:grid`}>
-                <ReceiptIcon className="size-[22px]" />
+                <ReceiptIcon className="size-5" />
               </a>
             )}
             <button type="button" onClick={() => cart.setOpen(true)} aria-label={`${t('cart')} (${cart.count})`} className={icon}>
-              <BagIcon className="size-[24px]" />
+              <BagIcon className="size-[22px]" />
               {cart.count > 0 && (
-                <span className="absolute bottom-1.5 end-1 grid min-w-[18px] place-items-center rounded-full bg-brand px-1 text-[11px] font-bold leading-[18px] text-white">{cart.count}</span>
+                <span className="absolute bottom-1.5 end-1 grid min-w-[18px] place-items-center rounded-full bg-ink-900 px-1 text-[10px] font-medium leading-[18px] text-white">{cart.count}</span>
               )}
             </button>
           </div>

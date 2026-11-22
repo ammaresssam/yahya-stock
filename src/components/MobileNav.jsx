@@ -32,7 +32,7 @@ export default function MobileNav({ route }) {
           <button type="button" onClick={() => cart.setOpen(true)} aria-label={`${t('cart')} (${cart.count})`} className={`${item} ${tone(cart.open)}`}>
             <span className="relative">
               <BagIcon className="size-6" />
-              {cart.count > 0 && <span className="absolute -top-1.5 -end-2.5 grid min-w-[18px] place-items-center rounded-full bg-brand px-1 text-[10px] font-bold leading-[18px] text-white">{num(cart.count)}</span>}
+              {cart.count > 0 && <span className="absolute -top-1.5 -end-2.5 grid min-w-[18px] place-items-center rounded-full bg-ink-900 px-1 text-[10px] font-medium leading-[18px] text-white">{num(cart.count)}</span>}
             </span>
             {t('cart')}
           </button>

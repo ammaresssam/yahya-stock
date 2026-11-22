@@ -39,17 +39,18 @@ export default function OfferPopup() {
   if (!open) return null
 
   return (
-    <div role="dialog" aria-labelledby="offer-title" className="rise fixed inset-x-4 bottom-20 z-40 bg-ink-900 p-6 text-center text-white shadow-2xl sm:inset-x-auto sm:end-5 sm:w-[380px] md:bottom-5">
-      <button type="button" onClick={close} aria-label={t('popupClose')} className="absolute end-2 top-2 grid size-10 place-items-center text-white/80 hover:text-white">
+    <div role="dialog" aria-labelledby="offer-title" className="rise fixed inset-x-4 bottom-20 z-40 border border-line bg-white p-7 text-center text-ink shadow-[0_20px_50px_-20px_rgba(0,0,0,.35)] sm:inset-x-auto sm:end-5 sm:w-[380px] md:bottom-5">
+      <button type="button" onClick={close} aria-label={t('popupClose')} className="absolute end-2 top-2 grid size-10 place-items-center text-muted hover:text-ink">
         <CloseIcon className="size-5" />
       </button>
-      <h2 id="offer-title" className="display px-8 text-xl">{t('popupTitle')}</h2>
-      <p className="mt-3 text-sm leading-relaxed text-white/80">{t('popupText')(num(topDiscount))}</p>
-      <a href={waLink()} target="_blank" rel="noopener noreferrer" onClick={close} className="btn mt-5 h-12 w-full bg-white text-ink-900 hover:bg-paper">
-        <WhatsAppIcon className="size-5 text-[#1fa855]" />
+      <p className="script text-3xl leading-none text-muted" aria-hidden="true">{t('heroScript')}</p>
+      <h2 id="offer-title" className="display mt-1 px-8 text-2xl text-ink-900">{t('popupTitle')}</h2>
+      <p className="mt-3 text-sm leading-relaxed text-muted">{t('popupText')(num(topDiscount))}</p>
+      <a href={waLink()} target="_blank" rel="noopener noreferrer" onClick={close} className="btn btn-ink mt-5 h-12 w-full">
+        <WhatsAppIcon className="size-5" />
         {t('popupCta')}
       </a>
-      <button type="button" onClick={() => { close(); browse({ onSale: true, sort: 'discount' }) }} className="mt-3 text-sm text-white/80 underline underline-offset-4 hover:text-white">
+      <button type="button" onClick={() => { close(); browse({ onSale: true, sort: 'discount' }) }} className="mt-3 text-sm text-muted underline underline-offset-4 hover:text-ink">
         {t('popupShop')}
       </button>
     </div>

@@ -45,3 +45,25 @@ export function Wordmark({ className = 'h-11 w-auto', tone = 'dark', title = 'Ya
     </svg>
   )
 }
+
+// Text logo for the light theme: a serif name with a script word under it.
+// Arabic uses Amiri + Ruqaa letters; English uses Cormorant + Pinyon Script.
+export function TextLogo({ lang = 'ar', size = 'md', className = '' }) {
+  const big = { sm: 'text-[1.7rem]', md: 'text-[2rem] lg:text-[2.5rem]', lg: 'text-[2.6rem]' }[size]
+  const small = { sm: 'text-[1.05rem]', md: 'text-[1.2rem] lg:text-[1.45rem]', lg: 'text-[1.6rem]' }[size]
+  if (lang === 'ar') {
+    // Arabic: the two words side by side, so the joined letters never overlap
+    return (
+      <span className={`inline-flex items-baseline gap-2 leading-none text-ink-900 ${className}`}>
+        <span className={`display ${big} font-bold leading-none`}>يحيى</span>
+        <span className={`script ${small} leading-none text-muted`}>استوك</span>
+      </span>
+    )
+  }
+  return (
+    <span className={`inline-flex flex-col leading-none text-ink-900 ${className}`}>
+      <span className={`display ${big} leading-none`}>Yahya</span>
+      <span className={`script ${small} -mt-1 self-end leading-none text-muted`}>stock</span>
+    </span>
+  )
+}

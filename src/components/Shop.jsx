@@ -42,7 +42,7 @@ export default function Shop() {
             <button type="button" onClick={() => setSheet(true)} className="btn btn-outline h-10 px-4 text-sm lg:hidden">
               <FilterIcon className="size-4" />
               {t('filters')}
-              {active > 0 && <span className="grid min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] leading-5 text-white">{num(active)}</span>}
+              {active > 0 && <span className="grid min-w-5 place-items-center rounded-full bg-ink-900 px-1 text-[11px] leading-5 text-white">{num(active)}</span>}
             </button>
             <label className="flex items-center gap-2 text-sm font-semibold text-muted">
               <span className="hidden sm:inline">{t('sortLabel')}</span>

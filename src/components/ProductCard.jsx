@@ -52,7 +52,7 @@ export default function ProductCard({ product: p, className = '' }) {
           </a>
         ) : (
           <a href={`#/product/${p.id}`} className="block" aria-label={`${t('viewProduct')}: ${name}`}>
-            <GarmentArt {...p.art} label={`${name} — ${t('illustration')}`} className="product-media aspect-[4/5] p-7" />
+            <GarmentArt {...p.art} bg="#efece8" label={`${name} — ${t('illustration')}`} className="product-media aspect-[4/5] p-7" />
           </a>
         )}
 
@@ -64,7 +64,7 @@ export default function ProductCard({ product: p, className = '' }) {
             <>
               {badge > 0 && <span className="sale-badge">{t('off')(num(badge))}</span>}
               {p.isNew && <span className="badge bg-white text-ink ring-1 ring-ink/10">{t('newBadge')}</span>}
-              {lowLeft > 0 && <span className="badge bg-amber-400 text-amber-950">{t('itemsLeft')(num(lowLeft))}</span>}
+              {lowLeft > 0 && <span className="badge bg-paper text-ink ring-1 ring-ink/15">{t('itemsLeft')(num(lowLeft))}</span>}
             </>
           )}
         </div>
@@ -73,12 +73,12 @@ export default function ProductCard({ product: p, className = '' }) {
       </div>
 
       <div className="flex flex-1 flex-col items-center pt-4 text-center">
-        <h3 className="display line-clamp-2 text-[14px] leading-snug text-ink-900 sm:text-[15px]">
+        <h3 className="display line-clamp-2 text-[17px] leading-snug text-ink-900 sm:text-lg">
           <a href={`#/product/${p.id}`} className="underline-offset-4 group-hover:underline">{name}</a>
         </h3>
 
-        <p className="display mt-1.5 flex flex-wrap items-baseline justify-center gap-x-2 text-[13px] sm:text-sm" aria-live="polite">
-          <span className={onSale ? 'text-brand' : 'text-muted'}>
+        <p className="mt-1.5 flex flex-wrap items-baseline justify-center gap-x-2 text-[14px]" aria-live="polite">
+          <span className={onSale ? 'font-medium text-brand' : 'text-muted'}>
             {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
           </span>
           {onSale && <s className="text-muted/70">{price(shownOld)}</s>}

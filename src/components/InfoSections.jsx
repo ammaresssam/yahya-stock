@@ -24,8 +24,8 @@ export function TrustStrip() {
       <ul className={`page-width grid grid-cols-2 gap-x-6 gap-y-10 ${items.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         {items.map(([Icon, title, text]) => (
           <li key={title} className="text-center">
-            <Icon className="mx-auto size-8 text-ink" />
-            <span className="mt-4 block text-lg font-bold text-ink">{title}</span>
+            <Icon className="mx-auto size-7 text-ink" />
+            <span className="display mt-4 block text-xl text-ink-900">{title}</span>
             <span className="mt-1 block text-sm leading-relaxed text-muted">{text}</span>
           </li>
         ))}
@@ -63,12 +63,12 @@ export function StoreContact() {
 
         <div className="grid gap-4 lg:grid-cols-3">
           {/* store details */}
-          <div className="rounded-lg bg-ink p-6 text-white lg:col-span-1">
+          <div className="bg-paper p-6 text-ink lg:col-span-1">
             <dl className="grid gap-5">
               <Info icon={PinIcon} label={t('address')}>
                 <span className="font-bold">{pick(site.address)}</span>
-                <span className="block text-sm text-white/60">{pick(site.area)}</span>
-                {!site.addressConfirmed && <span className="mt-1 block text-xs font-bold text-amber-300">{t('addressPending')}</span>}
+                <span className="block text-sm text-muted">{pick(site.area)}</span>
+                {!site.addressConfirmed && <span className="mt-1 block text-xs font-bold text-amber-700">{t('addressPending')}</span>}
               </Info>
               {site.hours?.length > 0 && (
                 <Info icon={ClockIcon} label={t('hours')}>
@@ -77,11 +77,11 @@ export function StoreContact() {
               )}
               <Info icon={PhoneIcon} label={t('phones')}>
                 {site.phones.map((p) => <a key={p.tel} href={`tel:${p.tel}`} dir="ltr" className="block w-fit font-bold hover:text-brand">{p.display}</a>)}
-                <a href={`tel:${site.landline.tel}`} dir="ltr" className="block w-fit text-white/70 hover:text-brand">{site.landline.display}</a>
+                <a href={`tel:${site.landline.tel}`} dir="ltr" className="block w-fit text-muted hover:text-brand">{site.landline.display}</a>
               </Info>
             </dl>
             {site.addressConfirmed && (
-              <a href={mapsDirections} target="_blank" rel="noopener noreferrer" className="btn btn-red mt-6 h-11 w-full px-5">
+              <a href={mapsDirections} target="_blank" rel="noopener noreferrer" className="btn btn-ink mt-6 h-11 w-full px-5">
                 <PinIcon className="size-5" />
                 {t('directions')}
               </a>
@@ -99,7 +99,7 @@ export function StoreContact() {
             </a>
             {site.phones.map((p) => (
               <a key={p.tel} href={`tel:${p.tel}`} className="contact-tile bg-white text-ink ring-1 ring-line">
-                <PhoneIcon className="size-6 text-brand" />
+                <PhoneIcon className="size-6 text-ink" />
                 <span>
                   <span className="block text-sm font-semibold text-muted">{t('callMobile')}</span>
                   <span dir="ltr" className="block text-lg font-bold">{p.display}</span>
@@ -109,7 +109,7 @@ export function StoreContact() {
             {socialList(t).length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {socialList(t).map(({ key, href, label, Icon }) => (
-                  <a key={key} href={href} target="_blank" rel="noopener noreferrer" className="btn h-11 bg-ink px-5 text-white hover:bg-brand">
+                  <a key={key} href={href} target="_blank" rel="noopener noreferrer" className="btn btn-outline h-11 px-5">
                     <Icon className="size-5" />
                     {label}
                   </a>
@@ -124,7 +124,7 @@ export function StoreContact() {
               <iframe title={t('mapTitle')} src={mapsEmbed} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="absolute inset-0 h-full w-full border-0" />
             </div>
           ) : (
-            <form onSubmit={submit} noValidate className="rounded-lg bg-white p-5 ring-1 ring-line">
+            <form onSubmit={submit} noValidate className="bg-white p-5 ring-1 ring-line">
               <h3 className="text-lg font-bold text-ink">{t('msgFormTitle')}</h3>
               <div className="mt-3 grid gap-3">
                 <div>
@@ -145,7 +145,7 @@ export function StoreContact() {
                   />
                   {msgError && <p id="c-msg-err" className="mt-1 text-sm font-bold text-brand">{t('formMsgRequired')}</p>}
                 </div>
-                <button type="submit" className="btn btn-red h-12">
+                <button type="submit" className="btn btn-ink h-12">
                   <WhatsAppIcon className="size-5" />
                   {t('formSend')}
                 </button>
@@ -163,9 +163,9 @@ export function StoreContact() {
 function Info({ icon: Icon, label, children }) {
   return (
     <div className="flex gap-3">
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand"><Icon className="size-5" /></span>
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-ink ring-1 ring-line"><Icon className="size-5" /></span>
       <div>
-        <dt className="text-sm text-white/55">{label}</dt>
+        <dt className="text-sm text-muted">{label}</dt>
         <dd className="mt-0.5">{children}</dd>
       </div>
     </div>

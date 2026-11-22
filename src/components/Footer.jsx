@@ -3,7 +3,7 @@ import { mapsDirections, waLink } from '../lib/links'
 import { site } from '../data/site'
 import { useData } from '../lib/store'
 import { checkoutAvailable, cardPaymentsEnabled } from '../lib/api'
-import { Wordmark } from './Brand'
+import { TextLogo } from './Brand'
 import { navItems } from './Header'
 import { socialList } from './InfoSections'
 import { CashIcon, GlobeIcon, WhatsAppIcon } from './Icons'
@@ -12,7 +12,7 @@ import { POLICY_KEYS, policies } from '../data/policies'
 // Theme-style footer: link columns on a light background, then a bottom row
 // with the language switch, the payment methods and the copyright.
 export default function Footer() {
-  const { t, pick, toggle } = useLang()
+  const { t, pick, toggle, lang } = useLang()
   const { live } = useData()
   const year = new Date().getFullYear()
   const socials = socialList(t)
@@ -29,7 +29,7 @@ export default function Footer() {
     <footer className="border-t border-line bg-paper text-ink">
       <div className="page-width grid gap-10 py-12 sm:grid-cols-2 sm:py-14 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
         <div>
-          <Wordmark tone="light" className="h-14 w-auto" title={pick(site.name)} />
+          <TextLogo lang={lang} size="lg" />
           <p className="mt-4 max-w-xs leading-relaxed text-muted">{t('footerText')}</p>
           {socials.length > 0 && (
             <ul className="mt-5 flex gap-1">

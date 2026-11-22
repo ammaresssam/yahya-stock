@@ -15,13 +15,12 @@ export default function ImageWithText() {
   return (
     <section id="about" className="scroll-mt-24 py-12 sm:py-16" aria-labelledby="about-title">
       <div className="page-width grid items-center gap-8 md:grid-cols-2 lg:gap-16">
-        <div className="relative overflow-hidden bg-ink">
+        <div className="relative overflow-hidden bg-stone">
           {photo ? (
             <img src={photo.image} alt={pick(photo.name)} loading="lazy" className="aspect-[5/4] w-full object-cover" />
           ) : (
             <div className="relative grid aspect-[5/4] place-items-center" aria-hidden="true">
-              <div className="dots absolute inset-0 opacity-[.08]" />
-              <BrandMark className="relative size-[46%]" ring="#e3262d" />
+                            <BrandMark className="relative size-[42%]" ring="#4a4642" fg="#f4f2ef" />
             </div>
           )}
         </div>

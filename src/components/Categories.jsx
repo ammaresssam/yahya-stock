@@ -4,6 +4,9 @@ import { useCatalog } from '../lib/catalogState'
 import GarmentArt from './GarmentArt'
 import { ArrowIcon } from './Icons'
 
+// soft neutral colours for the category drawings, so the page stays calm
+const SOFT = ['#4a4642', '#b9aa9a', '#d8c7a8']
+
 // Collection list: one tile per category, picture on top and the name underneath.
 export default function Categories() {
   const { t, pick, num } = useLang()
@@ -27,10 +30,10 @@ export default function Categories() {
                     {photo ? (
                       <img src={photo} alt="" loading="lazy" className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                     ) : (
-                      <GarmentArt {...c.art} className="aspect-square p-10" />
+                      <GarmentArt {...c.art} color={SOFT[i % SOFT.length]} bg="#efece8" className="aspect-square p-10" />
                     )}
                   </span>
-                  <span className="display mt-4 flex items-center justify-center gap-2 text-lg text-ink-900 sm:text-xl">
+                  <span className="display mt-4 flex items-center justify-center gap-2 text-xl text-ink-900 sm:text-2xl">
                     <span className="underline-offset-4 group-hover:underline">{pick(c.name)}</span>
                     <ArrowIcon className="size-5 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
                   </span>
