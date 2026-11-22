@@ -54,7 +54,7 @@ export default function OrderPage({ token }) {
   const date = (iso) => new Date(iso).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' })
 
   return (
-    <section className="bg-white py-10 sm:py-14" aria-labelledby="order-title">
+    <section className="bg-page py-10 sm:py-14" aria-labelledby="order-title">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <a href="#/shop" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('backToShop')}</a>
 

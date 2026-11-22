@@ -211,7 +211,7 @@ export default function CheckoutPage() {
 function Section({ children }) {
   const { t, dir } = useLang()
   return (
-    <section className="bg-white py-10 sm:py-14" aria-labelledby="checkout-title">
+    <section className="bg-page py-10 sm:py-14" aria-labelledby="checkout-title">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <a href="#/shop" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('backToShop')}</a>
         <h1 id="checkout-title" className="mt-2 mb-6 text-3xl font-bold text-ink sm:text-4xl">{t('checkoutTitle')}</h1>

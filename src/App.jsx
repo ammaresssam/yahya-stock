@@ -17,6 +17,7 @@ import PolicyPage from './components/PolicyPage'
 import { StoreContact, TrustStrip } from './components/InfoSections'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
+import OfferPopup from './components/OfferPopup'
 import CheckoutPage from './components/CheckoutPage'
 import OrderPage from './components/OrderPage'
 import { WhatsAppIcon } from './components/Icons'
@@ -124,6 +125,7 @@ function Page() {
       {route.name !== 'checkout' && <FloatingWhatsApp />}
       <MobileNav route={route.name} />
       <CartDrawer />
+      {route.name !== 'checkout' && route.name !== 'order' && <OfferPopup />}
     </>
   )
 }

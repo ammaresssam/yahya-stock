@@ -50,14 +50,14 @@ function AnnouncementBar() {
   )
 
   return (
-    <div className="bg-brand text-white" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+    <div className="bg-ink-900 text-white" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       <div className="page-width flex min-h-10 items-center justify-center gap-2">
         {many && (
           <button type="button" onClick={() => setI((n) => n - 1)} aria-label={t('prevMessage')} className="grid size-8 shrink-0 place-items-center rounded-md hover:bg-white/15">
             <ChevronIcon className="size-4 -scale-x-100 rtl:scale-x-100" />
           </button>
         )}
-        <p key={cur.key} className="announce-in min-w-0 flex-1 py-1.5 text-center text-[13px] font-semibold leading-snug sm:flex-none sm:px-6" aria-live="polite">
+        <p key={cur.key} className="announce-in display min-w-0 flex-1 py-1.5 text-center text-[13px] leading-snug sm:flex-none sm:px-6" aria-live="polite">
           {content}
         </p>
         {many && (
@@ -90,7 +90,7 @@ function SearchBar({ onClose }) {
     onClose()
   }
   return (
-    <div className="absolute inset-0 z-10 bg-white">
+    <div className="absolute inset-0 z-10 bg-page">
       <div className="page-width flex h-full items-center gap-3">
         <form role="search" onSubmit={submit} className="relative mx-auto flex w-full max-w-2xl">
           <label htmlFor="site-search" className="sr-only">{t('searchLabel')}</label>
@@ -102,7 +102,7 @@ function SearchBar({ onClose }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('searchPh')}
-            className="h-12 w-full rounded-md border border-ink/40 bg-white ps-4 pe-12 text-base text-ink outline-none transition placeholder:text-muted focus:border-ink"
+            className="h-12 w-full border border-ink/40 bg-white ps-4 pe-12 text-base text-ink outline-none transition placeholder:text-muted focus:border-ink"
           />
           <button type="submit" aria-label={t('searchLabel')} className="absolute end-1 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-md text-ink hover:bg-paper">
             <SearchIcon className="size-5" />
@@ -155,12 +155,12 @@ function MenuDrawer({ open, onClose, links }) {
           {links.map((l) => (
             <li key={l.key}>
               {l.href ? (
-                <a href={l.href} onClick={onClose} className={`flex items-center justify-between border-b border-line py-4 text-lg font-semibold ${l.hot ? 'text-brand' : 'text-ink'}`}>
+                <a href={l.href} onClick={onClose} className={`display flex items-center justify-between border-b border-line py-4 text-lg ${l.hot ? 'text-brand' : 'text-ink'}`}>
                   {l.label}
                   <ChevronIcon className="size-5 text-muted rtl:-scale-x-100" />
                 </a>
               ) : (
-                <button type="button" onClick={() => { l.go(); onClose() }} className={`flex w-full items-center justify-between border-b border-line py-4 text-start text-lg font-semibold ${l.hot ? 'text-brand' : 'text-ink'}`}>
+                <button type="button" onClick={() => { l.go(); onClose() }} className={`display flex w-full items-center justify-between border-b border-line py-4 text-start text-lg ${l.hot ? 'text-brand' : 'text-ink'}`}>
                   {l.label}
                   <ChevronIcon className="size-5 text-muted rtl:-scale-x-100" />
                 </button>
@@ -207,12 +207,12 @@ export default function Header({ route = 'home' }) {
   ]
 
   const icon = 'relative grid size-11 place-items-center rounded-md text-ink transition hover:bg-paper'
-  const navLink = (on, hot) => `relative inline-flex h-10 items-center px-3 text-[15px] transition underline-offset-[6px] hover:underline ${on ? 'font-bold text-ink underline decoration-2' : hot ? 'font-semibold text-brand' : 'font-semibold text-ink/75 hover:text-ink'}`
+  const navLink = (on, hot) => `display relative inline-flex h-10 items-center px-3 text-[15px] transition underline-offset-[8px] hover:underline ${on ? 'text-ink underline decoration-2' : hot ? 'text-brand' : 'text-ink/70 hover:text-ink'}`
 
   return (
     <>
       <AnnouncementBar />
-      <header className="sticky top-0 z-40 border-b border-line bg-white">
+      <header className="sticky top-0 z-40 border-b border-line bg-page">
         <div className="page-width relative flex h-16 items-center gap-1 lg:h-[76px] lg:gap-6">
           <button
             type="button"

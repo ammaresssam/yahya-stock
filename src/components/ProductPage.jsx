@@ -85,7 +85,7 @@ export default function ProductPage({ id }) {
 
   return (
     <>
-      <section className="bg-white pb-12 pt-5 sm:pb-16 sm:pt-8" aria-labelledby="product-title">
+      <section className="bg-page pb-12 pt-5 sm:pb-16 sm:pt-8" aria-labelledby="product-title">
         <div className="page-width">
           <nav aria-label="breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-muted">
             <a href="#home" className="hover:text-ink">{t('home')}</a>
@@ -102,7 +102,7 @@ export default function ProductPage({ id }) {
           <div className="grid items-start gap-7 md:grid-cols-[1.2fr_1fr] lg:gap-14">
             {/* ---------- photos ---------- */}
             <div>
-              <div className="relative overflow-hidden rounded-lg bg-paper">
+              <div className="relative overflow-hidden bg-paper">
                 {images.length ? (
                   <button type="button" onClick={() => setGallery(img)} className="block w-full" aria-label={t('viewPhotos')(num(images.length))}>
                     <img src={images[img]} alt={`${name} — ${t('photoN')(num(img + 1))}`} className="aspect-[4/5] w-full object-cover" fetchPriority="high" />
@@ -132,10 +132,10 @@ export default function ProductPage({ id }) {
             {/* ---------- buying ---------- */}
             <div className="md:sticky md:top-24">
               {category && <p className="text-sm text-muted">{pick(category.name)}</p>}
-              <h1 id="product-title" className="mt-1 text-[1.75rem] font-bold leading-tight text-ink sm:text-4xl">{name}</h1>
+              <h1 id="product-title" className="display mt-1 text-[1.75rem] leading-tight text-ink-900 sm:text-4xl">{name}</h1>
 
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1" aria-live="polite">
-                <span className={`text-2xl font-bold ${onSale ? 'text-brand' : 'text-ink'}`}>
+                <span className={`display text-2xl ${onSale ? 'text-brand' : 'text-ink'}`}>
                   {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
                 </span>
                 {onSale && <s className="text-lg text-muted">{price(shownOld)}</s>}
@@ -168,7 +168,7 @@ export default function ProductPage({ id }) {
               {!sold && (
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                   <span className="w-full text-sm text-muted" id="qty-label">{t('quantity')}</span>
-                  <div className="flex items-center rounded-md border border-ink/30" role="group" aria-labelledby="qty-label">
+                  <div className="flex items-center border border-ink/30" role="group" aria-labelledby="qty-label">
                     <button type="button" className="grid size-12 place-items-center hover:bg-paper disabled:opacity-30" aria-label={t('decrease')} disabled={qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))}>
                       <MinusIcon className="size-5" />
                     </button>

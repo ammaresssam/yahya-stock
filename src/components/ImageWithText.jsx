@@ -15,7 +15,7 @@ export default function ImageWithText() {
   return (
     <section id="about" className="scroll-mt-24 py-12 sm:py-16" aria-labelledby="about-title">
       <div className="page-width grid items-center gap-8 md:grid-cols-2 lg:gap-16">
-        <div className="relative overflow-hidden rounded-lg bg-ink">
+        <div className="relative overflow-hidden bg-ink">
           {photo ? (
             <img src={photo.image} alt={pick(photo.name)} loading="lazy" className="aspect-[5/4] w-full object-cover" />
           ) : (

@@ -38,7 +38,7 @@ export default function Hero() {
 
       <div className="page-width flex min-h-[440px] flex-col items-center justify-center py-16 text-center sm:min-h-[520px] lg:min-h-[600px]">
         <p className="rise text-sm font-semibold text-white/80 sm:text-base">{t('heroKicker')}</p>
-        <h1 className="rise mt-3 max-w-3xl text-[2.6rem] font-bold leading-[1.1] sm:text-6xl lg:text-7xl" style={{ '--d': '80ms' }}>
+        <h1 className="rise display mt-3 max-w-4xl text-[2.6rem] leading-[1.1] sm:text-6xl lg:text-7xl" style={{ '--d': '80ms' }}>
           {a} {b}
         </h1>
         <p className="rise mt-5 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg" style={{ '--d': '160ms' }}>{t('heroText')}</p>

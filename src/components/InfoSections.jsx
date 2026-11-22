@@ -20,7 +20,7 @@ export function TrustStrip() {
     [StoreIcon, t('trustStore'), t('trustStoreD')],
   ].filter(Boolean)
   return (
-    <section className="border-t border-line bg-white py-12 sm:py-14" aria-label={t('whyKicker')}>
+    <section className="border-t border-line bg-page py-12 sm:py-14" aria-label={t('whyKicker')}>
       <ul className={`page-width grid grid-cols-2 gap-x-6 gap-y-10 ${items.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         {items.map(([Icon, title, text]) => (
           <li key={title} className="text-center">
@@ -57,7 +57,7 @@ export function StoreContact() {
   }
 
   return (
-    <section id="visit" className="scroll-mt-24 bg-paper py-12 sm:py-16" aria-labelledby="store-title">
+    <section id="visit" className="scroll-mt-24 border-t border-line bg-page py-12 sm:py-16" aria-labelledby="store-title">
       <div className="page-width">
         <h2 id="store-title" className="section-title mb-6 sm:mb-8">{t('storeTitle')}</h2>
 

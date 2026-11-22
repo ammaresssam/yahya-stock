@@ -29,10 +29,10 @@ export default function Shop() {
   const title = filters.onSale ? t('navOffers') : cat ? pick(cat.name) : t('shopTitle')
 
   return (
-    <section id="shop" className="bg-white pb-14" aria-labelledby="shop-title">
+    <section id="shop" className="bg-page pb-14" aria-labelledby="shop-title">
       <div className="border-b border-line py-8 sm:py-10">
         <div className="page-width">
-          <h1 id="shop-title" className="section-title sm:text-[2.4rem]">{title}</h1>
+          <h1 id="shop-title" className="section-title text-center sm:text-[2.4rem]">{title}</h1>
         </div>
       </div>
       <div className="page-width pt-6">

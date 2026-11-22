@@ -10,7 +10,7 @@ export default function OrdersPage() {
   const date = (ms) => new Date(ms).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' })
 
   return (
-    <section className="bg-white py-10 sm:py-14" aria-labelledby="orders-title">
+    <section className="bg-page py-10 sm:py-14" aria-labelledby="orders-title">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <a href="#/shop" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('backToShop')}</a>
         <h1 id="orders-title" className="mt-2 text-3xl font-bold text-ink">{t('myOrdersTitle')}</h1>

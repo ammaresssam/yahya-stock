@@ -23,7 +23,7 @@ export default function PolicyPage({ which }) {
   }, [policy, pick])
 
   return (
-    <section className="bg-white py-10 sm:py-14" aria-labelledby="policy-title">
+    <section className="bg-page py-10 sm:py-14" aria-labelledby="policy-title">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <a href="#home" className="text-sm font-bold text-muted hover:text-ink">{dir === 'rtl' ? '→' : '←'} {t('home')}</a>
         <h1 id="policy-title" className="mt-2 text-3xl font-bold text-ink">{pick(policy.title)}</h1>

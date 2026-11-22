@@ -131,6 +131,12 @@ const strings = {
     productsCount: (n) => `${n} منتج`,
     quickAdd: 'أضف للسلة',
     chooseOptions: 'اختار المقاس',
+    viewAllProducts: 'عرض كل المنتجات',
+    popupTitle: 'عروض يحيى استوك',
+    popupText: (n) => `خصومات لحد ${n}٪ على منتجات مختارة. ابعتلنا على واتساب وإحنا نقولك على الجديد.`,
+    popupCta: 'كلمنا على واتساب',
+    popupShop: 'شوف العروض',
+    popupClose: 'إغلاق',
 
     marquee: ['ملابس استوك', 'أسعار مناسبة', 'رجالي', 'حريمي', 'ميامي – الإسكندرية', 'اطلب على واتساب'],
 
@@ -444,6 +450,12 @@ const strings = {
     productsCount: (n) => `${n} products`,
     quickAdd: 'Add to cart',
     chooseOptions: 'Choose a size',
+    viewAllProducts: 'View all products',
+    popupTitle: 'Yahya Stock offers',
+    popupText: (n) => `Up to ${n}% off selected items. Message us on WhatsApp and we’ll tell you what’s new.`,
+    popupCta: 'Message us on WhatsApp',
+    popupShop: 'See the offers',
+    popupClose: 'Close',
 
     marquee: ['Stock clothing', 'Affordable prices', 'Men', 'Women', 'Miami – Alexandria', 'Order on WhatsApp'],
 

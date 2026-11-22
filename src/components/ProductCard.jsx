@@ -44,7 +44,7 @@ export default function ProductCard({ product: p, className = '' }) {
 
   return (
     <article className={`product-card group relative flex flex-col ${className}`}>
-      <div className="relative overflow-hidden rounded-lg bg-paper">
+      <div className="relative overflow-hidden bg-paper">
         {p.image ? (
           <a href={`#/product/${p.id}`} className="relative block w-full" aria-label={`${t('viewProduct')}: ${name}`}>
             <img src={p.image} alt={name} loading="lazy" decoding="async" width="600" height="750" className="product-media aspect-[4/5] w-full object-cover" />
@@ -72,22 +72,22 @@ export default function ProductCard({ product: p, className = '' }) {
         {sold && <div className="pointer-events-none absolute inset-0 bg-white/40" />}
       </div>
 
-      <div className="flex flex-1 flex-col pt-3">
-        <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink sm:text-base">
+      <div className="flex flex-1 flex-col items-center pt-4 text-center">
+        <h3 className="display line-clamp-2 text-[14px] leading-snug text-ink-900 sm:text-[15px]">
           <a href={`#/product/${p.id}`} className="underline-offset-4 group-hover:underline">{name}</a>
         </h3>
 
-        <p className="mt-1 flex flex-wrap items-baseline gap-x-2" aria-live="polite">
-          <span className={`text-base font-bold sm:text-[17px] ${onSale ? 'text-brand' : 'text-ink'}`}>
+        <p className="display mt-1.5 flex flex-wrap items-baseline justify-center gap-x-2 text-[13px] sm:text-sm" aria-live="polite">
+          <span className={onSale ? 'text-brand' : 'text-muted'}>
             {!chosen && p.priceVaries ? t('from')(price(shownPrice)) : price(shownPrice)}
           </span>
-          {onSale && <s className="text-sm text-muted">{price(shownOld)}</s>}
+          {onSale && <s className="text-muted/70">{price(shownOld)}</s>}
         </p>
 
         {!sold && (
-          <div className="mt-2.5">
+          <div className="mt-3">
             <p id={sizesId} className="sr-only">{t('chooseSize')}</p>
-            <div role="group" aria-labelledby={sizesId} className="flex flex-wrap gap-1">
+            <div role="group" aria-labelledby={sizesId} className="flex flex-wrap justify-center gap-1">
               {p.variants.map((v) => (
                 <button
                   key={v.id}
@@ -110,7 +110,7 @@ export default function ProductCard({ product: p, className = '' }) {
         )}
 
         {!sold && (
-          <button type="button" onClick={add} className={`btn mt-auto h-11 w-full text-sm sm:text-[15px] ${added ? 'bg-emerald-600 text-white' : 'btn-outline'}`}>
+          <button type="button" onClick={add} className={`btn mt-auto h-10 w-full text-[13px] ${added ? 'bg-emerald-600 text-white' : 'btn-outline'}`}>
             {!added && <BagIcon className="size-[18px]" />}
             {added ? t('added') : t('quickAdd')}
           </button>
