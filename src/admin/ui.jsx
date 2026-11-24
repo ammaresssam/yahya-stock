@@ -10,6 +10,7 @@ export const ART_TYPES = [
   ['pants', 'بنطلون'],
   ['dress', 'فستان'],
   ['skirt', 'جيبة'],
+  ['bag', 'شنطة / إكسسوار'],
 ]
 
 export const QUICK_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Free Size']

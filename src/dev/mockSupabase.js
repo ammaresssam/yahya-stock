@@ -9,6 +9,7 @@ export function createMock() {
       { id: 'men', name_ar: 'رجالي', name_en: 'Men', art_type: 'shirt', art_color: '#2b2a2f', art_bg: '#e9e7e3', created_at: '2026-01-01' },
       { id: 'women', name_ar: 'حريمي', name_en: 'Women', art_type: 'dress', art_color: '#e3262d', art_bg: '#f6e4e2', created_at: '2026-01-02' },
       { id: 'kids', name_ar: 'أطفال', name_en: 'Kids', art_type: 'tee', art_color: '#f2b705', art_bg: '#fbf1cf', created_at: '2026-01-03' },
+      { id: 'accessories', name_ar: 'إكسسوارات', name_en: 'Accessories', art_type: 'bag', art_color: '#8a6f55', art_bg: '#efe8df', created_at: '2026-01-04' },
     ],
     products: [
       { id: 'p1', name_ar: 'قميص تجريبي', name_en: 'Test Shirt', category: 'men', is_new: true, featured: true, active: true, art_type: 'shirt', art_color: '#ffffff', art_bg: '#2b2a2f', created_at: '2026-02-01' },

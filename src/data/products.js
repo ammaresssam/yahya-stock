@@ -9,7 +9,7 @@
 //  الحقول — Fields:
 //   id        رقم/اسم مميز لا يتكرر
 //   name      اسم المنتج بالعربي والإنجليزي
-//   category  قسم المنتج (لازم يكون من الأقسام اللي تحت: men / women)
+//   category  قسم المنتج (لازم يكون من الأقسام اللي تحت: men / women / kids / accessories)
 //   price     السعر بالجنيه
 //   oldPrice  السعر قبل الخصم (اختياري — امسحه لو مفيش خصم)
 //   sizes     المقاسات المتاحة (كلها بنفس السعر)
@@ -20,13 +20,14 @@
 //   featured  true = يظهر في أول القائمة
 //   image     مسار صورة حقيقية داخل مجلد public مثل '/products/shirt-1.jpg'
 //             (لو مفيش صورة، الموقع يرسم رسمة توضيحية بدلها من حقل art)
-//   art       الرسمة التوضيحية: type = tee | shirt | hoodie | jacket | pants | dress | skirt
+//   art       الرسمة التوضيحية: type = tee | shirt | hoodie | jacket | pants | dress | skirt | bag
 // ============================================================
 
 export const categories = [
   { id: 'men', name: { ar: 'رجالي', en: 'Men' }, art: { type: 'shirt', color: '#2b2a2f', bg: '#e9e7e3' } },
   { id: 'women', name: { ar: 'حريمي', en: 'Women' }, art: { type: 'dress', color: '#e3262d', bg: '#f6e4e2' } },
   { id: 'kids', name: { ar: 'أطفال', en: 'Kids' }, art: { type: 'tee', color: '#f2b705', bg: '#fbf1cf' } },
+  { id: 'accessories', name: { ar: 'إكسسوارات', en: 'Accessories' }, art: { type: 'bag', color: '#8a6f55', bg: '#efe8df' } },
 ]
 
 export const products = [
@@ -212,5 +213,32 @@ export const products = [
     isNew: false,
     featured: false,
     art: { type: 'hoodie', color: '#3d5a80', bg: '#e4e8ee' },
+  },
+  {
+    id: 'a-01',
+    name: { ar: 'شنطة قماش', en: 'Canvas Tote Bag' },
+    category: 'accessories',
+    price: 150,
+    oldPrice: 220,
+    sizes: ['Free Size'],
+    stock: 'in',
+    isNew: true,
+    featured: false,
+    art: { type: 'bag', color: '#d8c7ad', bg: '#f3efe9' },
+    colors: [
+      { ar: 'بيج', en: 'Beige', hex: '#d8c7ad' },
+      { ar: 'أسود', en: 'Black', hex: '#1f1e1d' },
+    ],
+  },
+  {
+    id: 'a-02',
+    name: { ar: 'شنطة جلد صغيرة', en: 'Small Leather Bag' },
+    category: 'accessories',
+    price: 320,
+    sizes: ['Free Size'],
+    stock: 'low',
+    isNew: false,
+    featured: false,
+    art: { type: 'bag', color: '#8a6f55', bg: '#efe8df' },
   },
 ]

@@ -112,7 +112,7 @@ describe('AFTER the fix (all migrations)', () => {
       const d = await attempt(db, customer, `delete from public.categories where id = 'kids'`)
       assert.equal(u.affected, 0)
       assert.equal(d.affected, 0)
-      assert.equal((await sql(db, `select count(*)::int as n from public.categories`))[0].n, 3)
+      assert.equal((await sql(db, `select count(*)::int as n from public.categories`))[0].n, 4) // men, women, kids, accessories
     })
     test('cannot make themselves an admin', async () => {
       const r = await attempt(db, customer, `insert into public.admin_users (user_id) values ($1)`, [CUSTOMER])

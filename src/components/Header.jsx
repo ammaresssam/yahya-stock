@@ -199,15 +199,15 @@ export default function Header({ route = 'home' }) {
   // the same links in the desktop menu and the phone drawer
   const links = [
     { key: 'home', label: t('navHome'), href: '#home', active: route === 'home' },
-    { key: 'all', label: t('navShop'), go: () => browse({}), active: onShop && filters.category === 'all' && !filters.onSale },
     ...categories.map((c) => ({ key: c.id, label: pick(c.name), go: () => browse({ category: c.id }), active: onShop && filters.category === c.id && !filters.onSale })),
+    { key: 'all', label: t('navShopAll'), go: () => browse({}), active: onShop && filters.category === 'all' && !filters.onSale },
     ...(hasOffers ? [{ key: 'offers', label: t('navOffers'), go: () => browse({ onSale: true, sort: 'discount' }), active: onShop && filters.onSale, hot: true }] : []),
-    { key: 'new', label: t('navNew'), href: '#new' },
-    { key: 'contact', label: t('navContact'), href: '#contact' },
+    { key: 'new', label: t('navNew'), href: '#new', wide: true },
+    { key: 'contact', label: t('navContact'), href: '#contact', wide: true },
   ]
 
   const icon = 'relative grid size-11 place-items-center rounded-md text-ink transition hover:bg-paper'
-  const navLink = (on, hot) => `caps relative inline-flex h-10 items-center px-3 text-[13px] transition underline-offset-[8px] hover:underline ${on ? 'text-ink-900 underline' : hot ? 'text-brand' : 'text-ink/75 hover:text-ink-900'}`
+  const navLink = (on, hot) => `caps relative inline-flex h-10 items-center whitespace-nowrap px-2 text-[12px] xl:px-2.5 2xl:px-3 2xl:text-[13px] transition underline-offset-[8px] hover:underline ${on ? 'text-ink-900 underline' : hot ? 'text-brand' : 'text-ink/75 hover:text-ink-900'}`
 
   return (
     <>
@@ -232,7 +232,8 @@ export default function Header({ route = 'home' }) {
           <nav aria-label={t('categoriesNav')} className="hidden min-w-0 flex-1 lg:block">
             <ul className="flex flex-wrap items-center justify-center gap-x-1">
               {links.map((l) => (
-                <li key={l.key}>
+                // on small laptops the two extra links hide so the menu stays on one line
+                <li key={l.key} className={l.wide ? 'hidden xl:block' : undefined}>
                   {l.href ? (
                     <a href={l.href} aria-current={l.active ? 'page' : undefined} className={navLink(l.active, l.hot)}>{l.label}</a>
                   ) : (
