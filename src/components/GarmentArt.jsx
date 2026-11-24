@@ -52,6 +52,16 @@ const shapes = {
       <path d="M86 66 78 168M100 66v102M114 66l8 102" className="g-line" />
     </>
   ),
+  // accessories: a tote bag hanging by its handles
+  bag: (
+    <>
+      <path d="M76 96V70c0-16 10-26 24-26s24 10 24 26v26" style={{ fill: 'none', stroke: 'var(--g-fill)' }} strokeWidth="7" strokeLinecap="round" />
+      <path d="M56 92h88l8 82H48Z" />
+      <path d="M56 108h88" className="g-line" />
+      <circle cx="80" cy="100" r="2.6" className="g-dot" />
+      <circle cx="120" cy="100" r="2.6" className="g-dot" />
+    </>
+  ),
 }
 
 export default function GarmentArt({ type = 'tee', color = '#2b2a2f', bg = '#eeece8', label, className = '' }) {

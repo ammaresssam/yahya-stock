@@ -7,8 +7,8 @@ import { ArrowIcon } from './Icons'
 // soft neutral colours for the category drawings, so the page stays calm
 const SOFT = ['#4a4642', '#b9aa9a', '#d8c7a8']
 
-// Collection list: one tile per category (Men, Women, Kids...) plus a last "Shop all" tile.
-// Picture on top and the name underneath.
+// Collection list: one tile per category (Men, Women, Kids, Accessories).
+// Picture on top and the name underneath. "Shop all" lives in the menu.
 export default function Categories() {
   const { t, pick, num } = useLang()
   const { categories, products, loading } = useData()
@@ -43,38 +43,9 @@ export default function Categories() {
               </li>
             )
           })}
-          {!loading && <ShopAllTile products={products} />}
         </ul>
       </div>
     </section>
   )
 }
 
-// "Shop all": a small 2×2 collage from different products, opens the shop with no filter.
-function ShopAllTile({ products }) {
-  const { t, num } = useLang()
-  const { browse } = useCatalog()
-  // one item from each section first, so the collage shows men, women and kids together
-  const firsts = products.filter((p, i) => products.findIndex((q) => q.category === p.category) === i)
-  const picks = [...firsts, ...products.filter((p) => !firsts.includes(p))].slice(0, 4)
-  return (
-    <li>
-      <button type="button" onClick={() => browse({})} className="cat-tile group block w-full text-start">
-        <span className="grid aspect-square grid-cols-2 gap-1 overflow-hidden bg-paper p-1">
-          {picks.map((p, i) =>
-            p.image ? (
-              <img key={p.id} src={p.image} alt="" loading="lazy" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
-            ) : (
-              <GarmentArt key={p.id} {...p.art} color={SOFT[i % SOFT.length]} bg="#efece8" className="size-full p-4" />
-            ),
-          )}
-        </span>
-        <span className="display mt-4 flex items-center justify-center gap-2 text-lg text-ink-900 sm:text-2xl">
-          <span className="underline-offset-4 group-hover:underline">{t('navShopAll')}</span>
-          <ArrowIcon className="size-5 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
-        </span>
-        <span className="block text-center text-sm text-muted">{t('productsCount')(num(products.length))}</span>
-      </button>
-    </li>
-  )
-}
