@@ -199,8 +199,8 @@ export default function Header({ route = 'home' }) {
   // the same links in the desktop menu and the phone drawer
   const links = [
     { key: 'home', label: t('navHome'), href: '#home', active: route === 'home' },
-    { key: 'all', label: t('navShop'), go: () => browse({}), active: onShop && filters.category === 'all' && !filters.onSale },
     ...categories.map((c) => ({ key: c.id, label: pick(c.name), go: () => browse({ category: c.id }), active: onShop && filters.category === c.id && !filters.onSale })),
+    { key: 'all', label: t('navShopAll'), go: () => browse({}), active: onShop && filters.category === 'all' && !filters.onSale },
     ...(hasOffers ? [{ key: 'offers', label: t('navOffers'), go: () => browse({ onSale: true, sort: 'discount' }), active: onShop && filters.onSale, hot: true }] : []),
     { key: 'new', label: t('navNew'), href: '#new' },
     { key: 'contact', label: t('navContact'), href: '#contact' },
