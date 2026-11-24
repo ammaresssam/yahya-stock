@@ -34,35 +34,46 @@ const explain = (msg = '') => {
   return msg || 'حاول مرة أخرى'
 }
 
-export default function ProductForm({ product, categories, onClose, onSaved, notify }) {
+// Quick mode shows only photo, name, section, one price and sizes with quantities.
+// It is offered only when the product fits it (no colours, no discount, one price).
+const SIMPLE_PREF = 'ys-admin-simple-form'
+const readPref = () => { try { return localStorage.getItem(SIMPLE_PREF) !== 'full' } catch { return true } }
+const savePref = (simple) => { try { localStorage.setItem(SIMPLE_PREF, simple ? 'simple' : 'full') } catch { /* private mode */ } }
+export const fitsSimple = (colors, variants) =>
+  colors.length === 0 && variants.every((v) => !String(v.compare_at_price ?? '').trim()) && new Set(variants.map((v) => toNumber(v.price))).size <= 1
+
+// product: the row being edited. copyOf: a row to start a new product from (sizes and prices, no photos, empty quantities).
+export default function ProductForm({ product, copyOf, categories, onClose, onSaved, notify }) {
   const editing = Boolean(product)
+  const src = product ?? copyOf
   const [f, setF] = useState(() => ({
-    name_ar: product?.name_ar ?? '',
-    name_en: product?.name_en ?? '',
-    category: product?.category ?? categories[0]?.id ?? '',
-    is_new: product?.is_new ?? true,
-    featured: product?.featured ?? false,
-    active: product?.active ?? true,
-    art_type: product?.art_type ?? 'tee',
-    art_color: product?.art_color ?? '#2b2a2f',
-    art_bg: product?.art_bg ?? '#e9e7e3',
+    name_ar: copyOf ? `${copyOf.name_ar} (نسخة)` : product?.name_ar ?? '',
+    name_en: src?.name_en ?? '',
+    category: src?.category ?? categories[0]?.id ?? '',
+    is_new: copyOf ? true : product?.is_new ?? true,
+    featured: copyOf ? false : product?.featured ?? false,
+    active: src?.active ?? true,
+    art_type: src?.art_type ?? 'tee',
+    art_color: src?.art_color ?? '#2b2a2f',
+    art_bg: src?.art_bg ?? '#e9e7e3',
   }))
   // Colours: each group has a name (Arabic required, English optional) and a swatch.
   // When there are no colour groups, sizes work exactly as before.
   const initial = useMemo(() => {
-    const rows = [...(product?.product_variants ?? [])].sort((a, b) => a.position - b.position)
+    const rows = [...(src?.product_variants ?? [])].sort((a, b) => a.position - b.position)
     const groups = []
     for (const v of rows) {
       if (v.color_ar && !groups.some((g) => g.ar === v.color_ar)) groups.push({ cid: key(), ar: v.color_ar, en: v.color_en ?? '', hex: v.color_hex || '#888888' })
     }
     const variants = rows.map((v) => ({
       key: key(),
-      id: v.id,
+      fixed: true,
+      id: copyOf ? undefined : v.id,
       cid: v.color_ar ? groups.find((g) => g.ar === v.color_ar).cid : null,
       size: v.size,
       price: String(v.price),
       compare_at_price: v.compare_at_price ? String(v.compare_at_price) : '',
-      stock_qty: String(v.stock_qty),
+      stock_qty: copyOf ? '' : String(v.stock_qty),
     }))
     return { groups, variants }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -72,6 +83,20 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
     [...(product?.product_images ?? [])].sort((a, b) => a.position - b.position).map((i) => ({ key: key(), url: i.url, storage_path: i.storage_path })),
   )
   const [bulkPrice, setBulkPrice] = useState('')
+  const canSimple = fitsSimple(colors, variants)
+  const [simple, setSimpleState] = useState(() => readPref() && fitsSimple(initial.groups, initial.variants))
+  const [simplePrice, setSimplePrice] = useState(() => initial.variants[0]?.price ?? '')
+  const setSimple = (on) => {
+    if (on && !canSimple) return
+    if (on) setSimplePrice(variants[0]?.price ?? simplePrice)
+    else setVariants((vs) => vs.map((v) => ({ ...v, price: simplePrice }))) // carry the one price into every size
+    setSimpleState(on)
+    savePref(on)
+  }
+  const changeSimplePrice = (value) => {
+    setSimplePrice(value)
+    setVariants((vs) => vs.map((v) => ({ ...v, price: value })))
+  }
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -82,7 +107,8 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
   const addSize = (size = '', cid = null) => {
     if (size && sizesIn(cid).includes(size.toLowerCase())) return
     const last = variants[variants.length - 1]
-    setVariants((vs) => [...vs, { key: key(), cid, size, price: last?.price ?? '', compare_at_price: last?.compare_at_price ?? '', stock_qty: '' }])
+    const price = simple ? simplePrice : last?.price ?? ''
+    setVariants((vs) => [...vs, { key: key(), fixed: Boolean(size), cid, size, price, compare_at_price: simple ? '' : last?.compare_at_price ?? '', stock_qty: '' }])
   }
 
   const setColor = (cid, field, value) => setColors((cs) => cs.map((c) => (c.cid === cid ? { ...c, [field]: value } : c)))
@@ -123,6 +149,7 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
   const validate = () => {
     if (!f.name_ar.trim()) return 'اكتب اسم المنتج بالعربي'
     if (!f.category) return 'اختار القسم (أضف قسماً من تبويب الأقسام أولاً)'
+    if (simple && !toNumber(simplePrice)) return 'اكتب السعر'
     if (!variants.length) return 'أضف مقاس واحد على الأقل (أو Free Size)'
     const names = new Set()
     for (const c of colors) {
@@ -211,8 +238,21 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
   }
 
   return (
-    <Modal title={editing ? 'تعديل منتج' : 'منتج جديد'} onClose={onClose}>
+    <Modal title={editing ? 'تعديل منتج' : copyOf ? 'نسخة من منتج' : 'منتج جديد'} onClose={onClose}>
       <form onSubmit={save} className="grid gap-6">
+        <div className="-mt-1 grid gap-2">
+          <div role="group" aria-label="شكل الفورم" className="grid grid-cols-2 gap-1 rounded-full bg-paper p-1">
+            <button type="button" aria-pressed={simple} onClick={() => setSimple(true)} disabled={!canSimple && !simple} className={`h-10 rounded-full text-sm font-bold disabled:opacity-40 ${simple ? 'bg-white text-ink shadow' : 'text-muted'}`}>
+              سريع
+            </button>
+            <button type="button" aria-pressed={!simple} onClick={() => setSimple(false)} className={`h-10 rounded-full text-sm font-bold ${!simple ? 'bg-white text-ink shadow' : 'text-muted'}`}>
+              كل التفاصيل
+            </button>
+          </div>
+          {copyOf && <p className="rounded-2xl bg-paper p-3 text-sm text-muted">نسخنا الاسم والقسم والمقاسات والأسعار. غيّر الاسم، ضيف الصور، واكتب الكميات.</p>}
+          {!simple && !canSimple && <p className="text-xs text-muted">الشكل السريع مش متاح للمنتج ده لأن فيه ألوان أو خصم أو أكتر من سعر.</p>}
+        </div>
+
         {/* ---------- photos ---------- */}
         <section>
           <div className="mb-2 flex items-center justify-between">
@@ -247,7 +287,7 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
               </label>
             )}
           </div>
-          {!images.length && (
+          {!images.length && !simple && (
             <div className="mt-3 flex items-center gap-3 rounded-2xl bg-paper p-3">
               <GarmentArt type={f.art_type} color={f.art_color} bg={f.art_bg} className="size-16 shrink-0 rounded-xl p-1" />
               <div className="grid flex-1 grid-cols-3 gap-2">
@@ -262,15 +302,17 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
         </section>
 
         {/* ---------- basics ---------- */}
-        <section className="grid gap-4 sm:grid-cols-3">
+        <section className={`grid gap-4 ${simple ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
           <div className="sm:col-span-1">
-            <label htmlFor="p-ar" className="field-label">اسم المنتج (عربي) *</label>
+            <label htmlFor="p-ar" className="field-label">{simple ? 'اسم المنتج *' : 'اسم المنتج (عربي) *'}</label>
             <input id="p-ar" className="field" value={f.name_ar} onChange={(e) => set('name_ar', e.target.value)} />
           </div>
-          <div>
-            <label htmlFor="p-en" className="field-label">بالإنجليزي (اختياري)</label>
-            <input id="p-en" dir="ltr" className="field" value={f.name_en} onChange={(e) => set('name_en', e.target.value)} />
-          </div>
+          {!simple && (
+            <div>
+              <label htmlFor="p-en" className="field-label">بالإنجليزي (اختياري)</label>
+              <input id="p-en" dir="ltr" className="field" value={f.name_en} onChange={(e) => set('name_en', e.target.value)} />
+            </div>
+          )}
           <div>
             <label htmlFor="p-cat" className="field-label">القسم *</label>
             <select id="p-cat" className="field" value={f.category} onChange={(e) => set('category', e.target.value)}>
@@ -279,8 +321,12 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
           </div>
         </section>
 
+        {simple && (
+          <SimpleSizes price={simplePrice} onPrice={changeSimplePrice} variants={variants} sizesIn={sizesIn} addSize={addSize} setVariant={setVariant} setVariants={setVariants} />
+        )}
+
         {/* ---------- sizes (and colours) ---------- */}
-        <section>
+        {!simple && <section>
           <p className="field-label">المقاسات والألوان والأسعار والكميات *</p>
 
           {variants.length > 1 && (
@@ -322,13 +368,13 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
             <PlusIcon className="size-4" />
             {colors.length ? 'لون جديد (بنفس المقاسات)' : 'أضف ألوان للمنتج (أحمر، أزرق…)'}
           </button>
-        </section>
+        </section>}
 
-        <section className="grid gap-2 sm:grid-cols-3">
+        {!simple && <section className="grid gap-2 sm:grid-cols-3">
           <Check label="يظهر في «وصل حديثاً»" checked={f.is_new} onChange={(v) => set('is_new', v)} />
           <Check label="منتج مميز (يظهر أولاً)" checked={f.featured} onChange={(v) => set('featured', v)} />
           <Check label="ظاهر في الموقع" checked={f.active} onChange={(v) => set('active', v)} />
-        </section>
+        </section>}
 
         {error && <p role="alert" className="rounded-2xl bg-brand/10 p-3 font-bold text-brand">{error}</p>}
 
@@ -338,6 +384,54 @@ export default function ProductForm({ product, categories, onClose, onSaved, not
         </div>
       </form>
     </Modal>
+  )
+}
+
+// Quick mode: one price, then tap sizes and type how many of each.
+function SimpleSizes({ price, onPrice, variants, sizesIn, addSize, setVariant, setVariants }) {
+  const have = sizesIn(null)
+  const toggle = (s) => {
+    const hit = variants.find((v) => v.size.trim().toLowerCase() === s.toLowerCase())
+    if (hit) setVariants((vs) => vs.filter((v) => v.key !== hit.key))
+    else addSize(s, null)
+  }
+  return (
+    <section className="grid gap-4">
+      <div className="max-w-48">
+        <label htmlFor="p-price" className="field-label">السعر (ج.م) *</label>
+        <input id="p-price" inputMode="numeric" className="field" value={price} onChange={(e) => onPrice(e.target.value)} />
+      </div>
+      <div>
+        <p className="field-label">المقاسات والكمية *</p>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {QUICK_SIZES.map((s) => (
+            <button key={s} type="button" className="size-chip" aria-pressed={have.includes(s.toLowerCase())} onClick={() => toggle(s)}>
+              {have.includes(s.toLowerCase()) ? '✓' : '+'} {s}
+            </button>
+          ))}
+          <button type="button" className="size-chip" onClick={() => addSize('', null)}>+ مقاس آخر</button>
+        </div>
+        {variants.length === 0 ? (
+          <p className="rounded-2xl bg-paper p-4 text-center text-sm text-muted">دوس على المقاسات اللي عندك</p>
+        ) : (
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {variants.map((v) => (
+              <li key={v.key} className="flex items-end gap-2 rounded-2xl border border-line p-2.5">
+                {v.fixed ? (
+                  <span dir="ltr" className="grid h-10 min-w-12 place-items-center rounded-xl bg-paper px-2 text-sm font-black text-ink">{v.size}</span>
+                ) : (
+                  <Field label="المقاس" id={`s-${v.key}`} dir="ltr" value={v.size} onChange={(x) => setVariant(v.key, 'size', x)} />
+                )}
+                <Field label="الكمية" id={`q-${v.key}`} numeric value={v.stock_qty} onChange={(x) => setVariant(v.key, 'stock_qty', x)} />
+                <button type="button" onClick={() => setVariants((vs) => vs.filter((y) => y.key !== v.key))} aria-label={`حذف المقاس ${v.size}`} className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-paper hover:text-brand">
+                  <CloseIcon className="size-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
   )
 }
 

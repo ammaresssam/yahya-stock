@@ -3,6 +3,7 @@ import supabase from '../lib/supabase'
 import GarmentArt from '../components/GarmentArt'
 import { PlusIcon, TrashIcon } from '../components/Icons'
 import ProductForm from './ProductForm'
+import BulkUpload from './BulkUpload'
 import { LOW_STOCK } from './ui'
 
 const BUCKET = 'product-images'
@@ -26,7 +27,8 @@ export function StockPill({ qty }) {
 export default function ProductsTab({ products, categories, refresh, notify }) {
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('all')
-  const [editing, setEditing] = useState(null) // null | 'new' | product row
+  const [editing, setEditing] = useState(null) // null | 'new' | product row | { copyOf: product row }
+  const [bulk, setBulk] = useState(false)
 
   const catName = useMemo(() => Object.fromEntries(categories.map((c) => [c.id, c.name_ar])), [categories])
 
@@ -75,12 +77,15 @@ export default function ProductsTab({ products, categories, refresh, notify }) {
           <PlusIcon className="size-5" />
           منتج جديد
         </button>
+        <button type="button" onClick={() => setBulk(true)} className="btn h-11 border border-line bg-white px-5 hover:border-ink">
+          رفع من Excel
+        </button>
       </div>
 
       {products.length === 0 ? (
         <div className="rounded-3xl bg-white p-10 text-center ring-1 ring-line">
           <p className="text-lg font-bold text-ink">لسه مفيش منتجات</p>
-          <p className="mt-1 text-muted">دوس «منتج جديد» وضيف أول منتج — هيظهر في الموقع على طول.</p>
+          <p className="mt-1 text-muted">دوس «منتج جديد» وضيف أول منتج — هيظهر في الموقع على طول. أو «رفع من Excel» لو عندك منتجات كتير.</p>
         </div>
       ) : list.length === 0 ? (
         <p className="rounded-3xl bg-white p-10 text-center text-muted ring-1 ring-line">مفيش نتائج.</p>
@@ -125,6 +130,9 @@ export default function ProductsTab({ products, categories, refresh, notify }) {
                     {p.active ? 'إخفاء' : 'إظهار'}
                   </button>
                   <button type="button" onClick={() => setEditing(p)} className="btn btn-ink h-10 px-4 text-sm">تعديل</button>
+                  <button type="button" onClick={() => setEditing({ copyOf: p })} aria-label={`نسخ ${p.name_ar}`} className="btn h-10 border border-line px-4 text-sm hover:border-ink">
+                    نسخ
+                  </button>
                   <button type="button" onClick={() => remove(p)} aria-label={`حذف ${p.name_ar}`} className="grid size-10 place-items-center rounded-full text-muted hover:bg-paper hover:text-brand">
                     <TrashIcon className="size-5" />
                   </button>
@@ -137,13 +145,17 @@ export default function ProductsTab({ products, categories, refresh, notify }) {
 
       {editing && (
         <ProductForm
-          product={editing === 'new' ? null : editing}
+          key={editing === 'new' ? 'new' : editing.copyOf ? `copy-${editing.copyOf.id}` : editing.id}
+          product={editing === 'new' || editing.copyOf ? null : editing}
+          copyOf={editing.copyOf ?? null}
           categories={categories}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); refresh() }}
           notify={notify}
         />
       )}
+
+      {bulk && <BulkUpload categories={categories} products={products} onClose={() => setBulk(false)} onDone={refresh} notify={notify} />}
     </div>
   )
 }
